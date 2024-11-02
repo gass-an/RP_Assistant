@@ -1,7 +1,7 @@
 from typing import Final
 import os 
 from dotenv import load_dotenv
-from discord import Intents, Client, Message
+from discord import Intents, Client, Message, Embed
 from responses import get_response
 
 # Récupérer le token
@@ -24,7 +24,10 @@ async def send_message(message: Message, user_message) :
         return
     
     response = get_response(message)
-    await message.channel.send(embed=response)
+    if isinstance(response, Embed) :
+        await message.channel.send(embed=response)
+    else :
+        await message.channel.send(response)
 
 
 
