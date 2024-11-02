@@ -23,8 +23,8 @@ async def send_message(message: Message, user_message) :
         print("Le message est vide")
         return
     
-    response = get_response(user_message)
-    await message.channel.send(response)
+    response = get_response(message)
+    await message.channel.send(embed=response)
 
 
 
