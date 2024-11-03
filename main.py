@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from discord import Intents, Client, Message, Embed
 from responses import get_response
 
+
 # Récupérer le token
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord_token')
@@ -14,7 +15,6 @@ TOKEN: Final[str] = os.getenv('discord_token')
 intents = Intents.default()
 intents.message_content = True  # NOQA
 client: Client = Client(intents=intents)
-
 
 
 # Fonction pour envoyer un message
@@ -44,10 +44,12 @@ async def on_message(message: Message) :
         return
 
     username = str(message.author)
+    username_on_server = str(message.author.display_name)
     user_message = message.content
     channel = str(message.channel)
+    server_name = str(message.guild.name)
 
-    print(f"[{channel}] {username} : '{user_message}' ")
+    print(f'[{server_name} : {channel}] {username_on_server} ({username}) : "{user_message}" ')
     await send_message(message, user_message)
 
 

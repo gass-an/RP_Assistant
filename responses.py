@@ -22,7 +22,7 @@ def get_response(message) :
             embed = Embed(
                 title=f":game_die: **Jet de dés pour {username}** :game_die:",
                 description=f":sparkles: Le sort de votre personnage se joue maintenant ! :sparkles: \n\n**Type de dé** : D{number} \nRésultat : **{random_number}**",
-                colour=discord.Color.dark_magenta()
+                colour=discord.Color(0xFF0000)
             )
 
             embed.set_footer(text="L'hôpital vous remercie pour votre visite")
