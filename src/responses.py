@@ -23,7 +23,7 @@ def roll(interaction: discord.Interaction, nb_faces: int):
         random_number = random.randint(1, nb_faces)
         embed = discord.Embed(
             title=f":game_die: **Jet de dés pour {username_on_server}** :game_die:",
-            description=f":sparkles: Le sort de votre personnage se joue maintenant ! :sparkles: \n\n**Type de dé** : D{nb_faces} \n\nRésultat :",
+            description=f":sparkles: Votre sort se joue maintenant ! :sparkles: \n\n**Type de dé** : D{nb_faces} \n\nRésultat :",
             colour= discord.Color(0xFF0000)
         )
 
