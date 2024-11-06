@@ -48,7 +48,14 @@ def roll(interaction: discord.Interaction, nb_faces: int):
 
 
         image_path = f"./images/{random_number}.png"
-        file = discord.File(image_path, filename=f"{random_number}.png")
-        embed.set_image(url=f"attachment://{random_number}.png")
+        thumbnail_path = "./images/logo_PillboxHospital.png"
         
-        return [embed,file,random_number]
+        
+        image_file = discord.File(image_path, filename="image.png")
+        thumbnail_file = discord.File(thumbnail_path, filename="thumbnail.png")
+        
+        embed.set_image(url=f"attachment://image.png")
+        embed.set_thumbnail(url="attachment://thumbnail.png")
+
+
+        return [embed,[image_file,thumbnail_file],random_number]

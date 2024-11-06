@@ -44,7 +44,7 @@ async def roll_command(interaction: discord.Interaction, nb_faces: int):
     answer = responses.roll(interaction, nb_faces)
     
     if isinstance(answer[0], discord.Embed) :
-        await interaction.response.send_message(embed=answer[0], file=answer[1])
+        await interaction.response.send_message(embed=answer[0], files=answer[1])
         os.remove(f"./images/{answer[2]}.png")
     else :
         await interaction.response.send_message(answer)
