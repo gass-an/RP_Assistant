@@ -15,5 +15,5 @@ RUN pip install -r requirements.txt
 
 
 # Spécifier la commande de démarrage pour exécuter main.py
-CMD ["python", "main.py"]
+CMD ["python", "src/main.py"]
 
