@@ -1,8 +1,6 @@
 import random
 import discord
 import images
-import os
-
 
 
 def ping(interaction: discord.Interaction):
@@ -54,4 +52,3 @@ def roll(interaction: discord.Interaction, nb_faces: int):
         embed.set_image(url=f"attachment://{random_number}.png")
         
         return [embed,file,random_number]
-225
