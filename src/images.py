@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 
-def create_Text_Image(number: str):
+def create_Text_Image(number: str, color: tuple[int,int,int]):
     image = Image.new("RGB", size=(400,200), color=(80,80,80))
     draw = ImageDraw.Draw(image)
         
@@ -12,7 +12,7 @@ def create_Text_Image(number: str):
     number_x = (image.width - number_width) // 2
     number_y = (image.height - number_height - 50) // 2
 
-    draw.text((number_x, number_y), number, fill="red", font=font)
+    draw.text((number_x, number_y), number, fill=color, font=font)
 
 
     image.save(f"./images/{number}.png", "PNG")
