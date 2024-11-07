@@ -20,7 +20,8 @@ def roll(interaction: discord.Interaction, nb_faces: int):
         return "J'attends un nombre supérieur à 1 !"
     else :
         username_on_server = interaction.user.display_name
-        random_number = random.randint(1, nb_faces)
+        #random_number = random.randint(1, nb_faces)
+        random_number = 10
         embed = discord.Embed(
             title=f":game_die: **Jet de dés pour {username_on_server}** :game_die:",
             description=f":sparkles: Votre sort se joue maintenant ! :sparkles: \n\n**Type de dé** : D{nb_faces} \n\nRésultat :",
@@ -37,11 +38,11 @@ def roll(interaction: discord.Interaction, nb_faces: int):
         elif random_number > 1 and random_number < (nb_faces//2):
             color = (255, 127, 0)
         elif random_number == (nb_faces//2):
-            color = (255, 180, 80)
-        elif random_number > (nb_faces//2) and random_number < nb_faces:
-            color = (255, 215, 60)
-        elif random_number == nb_faces : 
             color = (255, 255, 0)
+        elif random_number > (nb_faces//2) and random_number < nb_faces:
+            color = (175, 255, 0)
+        elif random_number == nb_faces : 
+            color = (0, 255, 0)
             
         images.create_Text_Image(random_number_str, color)
 
