@@ -30,44 +30,55 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
         else :
             bg_path = "./images/bg_dice_pairs.png"
         
-        # Couleur en fonction du résultat du dé
+
+        # Couleur et footer en fonction du résultat du dé
         if random_number == 1 :
             color = (255, 0, 0)
             color_hexa = 0xFF0000
+            text_footer = "Échec critique !"
         elif random_number > 1 and random_number < (nb_faces//2):
             color = (255, 127, 0)
             color_hexa = 0xFF7F00
+            text_footer = "Échec ... "
         elif random_number == (nb_faces//2):
             color = (255, 255, 0)
             color_hexa = 0xFFFF00
+            text_footer = "Ni bon, ni mauvais... "
         elif random_number > (nb_faces//2) and random_number < nb_faces:
             color = (0, 150, 0)
             color_hexa = 0x009600
+            text_footer = "Réussite."
         elif random_number == nb_faces : 
             color = (0, 230, 0)
             color_hexa = 0x00E600
+            text_footer = "Réussite critique !" 
     
     
     else : 
         font_path = "/app/fonts/LHANDW.TTF"
         bg_path = "./images/bg_roll.jpg"
-        
-        # Couleur en fonction du résultat du dé
+
+        # Couleur et footer en fonction du résultat du dé
         if random_number == 1 :
             color = (255, 0, 0)
             color_hexa = 0xFF0000
+            text_footer = "Échec critique !"
         elif random_number > 1 and random_number < (nb_faces//2):
             color = (255, 127, 0)
             color_hexa = 0xFF7F00
+            text_footer = "Échec ... "
         elif random_number == (nb_faces//2):
             color = (255, 255, 0)
             color_hexa = 0xFFFF00
+            text_footer = "Ni bon, ni mauvais... "
         elif random_number > (nb_faces//2) and random_number < nb_faces:
             color = (175, 255, 0)
             color_hexa = 0xAFFF00
+            text_footer = "Réussite."
         elif random_number == nb_faces : 
             color = (0, 255, 0)
             color_hexa = 0x00FF00
+            text_footer = "Réussite critique !" 
         
 
 
@@ -80,7 +91,7 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
         colour= discord.Color(color_hexa)
     )
 
-    embed.set_footer(text="L'hôpital vous remercie pour votre visite")
+    embed.set_footer(text=text_footer)
     
     
     images.create_bg_roll_Image(random_number_str, text_color=color, image_path=bg_path, font_path=font_path)
