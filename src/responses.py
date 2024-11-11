@@ -107,3 +107,5 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
 
 
     return [embed,[image_file,thumbnail_file],random_number]
+
+
