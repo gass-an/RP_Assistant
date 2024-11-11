@@ -27,12 +27,16 @@ async def on_ready():
 
 
 
-# Commandes prises en charges
+
+# ----------------- Commandes prises en charges ------------------------------------
+
+# /ping (répond : Pong!) 
 @bot.slash_command(name="ping",description="ping-pong (pour tester le bot)", guild_ids=MY_GUILDS)
 async def ping_command(interaction: discord.Interaction):
     
     answer = responses.ping(interaction)
     await interaction.response.send_message(answer)
+
 
 
 # /roll pour faire un D20
@@ -47,6 +51,8 @@ async def roll_command(interaction: discord.Interaction):
         os.remove(f"./images/{answer[2]}.png")
     else :
         await interaction.response.send_message(answer)
+
+
 
 # /roll2 int pour fair un D'int'
 @bot.slash_command(name="roll2",description="Fait un jet de dés personalisé", guild_ids=MY_GUILDS)
