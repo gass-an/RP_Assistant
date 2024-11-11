@@ -35,7 +35,7 @@ async def ping_command(interaction: discord.Interaction):
     await interaction.response.send_message(answer)
 
 
-
+# /roll pour faire un D20
 @bot.slash_command(name="roll",description="Fait un jet de dés : D20", guild_ids=MY_GUILDS)
 async def roll_command(interaction: discord.Interaction):
 
@@ -48,7 +48,7 @@ async def roll_command(interaction: discord.Interaction):
     else :
         await interaction.response.send_message(answer)
 
-
+# /roll2 int pour fair un D'int'
 @bot.slash_command(name="roll2",description="Fait un jet de dés personalisé", guild_ids=MY_GUILDS)
 @discord.option("nb_faces", int ,description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
 async def roll_command(interaction: discord.Interaction, nb_faces: int):
@@ -61,14 +61,6 @@ async def roll_command(interaction: discord.Interaction, nb_faces: int):
     else :
         await interaction.response.send_message(answer)
 
-
-
-
-# user = interaction.user
-# username = user.name
-# username_on_server = user.display_name
-# channel = interaction.channel.name
-# server_name = interaction.guild.name
 
 
 
