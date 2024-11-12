@@ -111,7 +111,7 @@ def embed_fiche_patient(id_patient: str):
     actual_patient= gestionJson.get_patient_infos(id_patient)
 
     embed=discord.Embed(
-        title=f"Fiche médicale de {actual_patient['nom']} {actual_patient['prenom']}",
+        title=f"{actual_patient['prenom']} {actual_patient['nom']}",
         description=f"{actual_patient['age']} ans",
         colour=discord.Color(0xFF0000)
     )
@@ -121,9 +121,10 @@ def embed_fiche_patient(id_patient: str):
     nb_operation = len(actual_patient["operations"])
     for i in  range(nb_operation): 
         operation_i = actual_patient["operations"][i]
+        embed.add_field(name='', value='',inline=False)
         embed.add_field(
-            name=f"{operation_i['id']}. {operation_i['date']} {operation_i['causes']}", 
-            value=f"{operation_i['consequences']}",
+            name=f"\n\n :red_circle: Opération n°{operation_i['id']} : {operation_i['causes']} ", 
+            value=f"** Date : ** {operation_i['date']} \n  {operation_i['consequences' ]} ",
             inline=False
             )
         
@@ -131,4 +132,9 @@ def embed_fiche_patient(id_patient: str):
     thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
     embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
 
-    return [embed,thumbnail_file]
+    image_path = f"./images/banner_PillboxHospital.png"
+    image_file = discord.File(image_path, filename=f"banner_PillboxHospital.png")
+    embed.set_image(url=f"attachment://banner_PillboxHospital.png")
+
+    return [embed,[thumbnail_file, image_file]]
+

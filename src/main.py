@@ -86,9 +86,9 @@ async def nom_autocomplete(interaction: discord.AutocompleteContext):
 @discord.option("nom_prenom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 async def patient_command(interaction: discord.Interaction, nom_prenom: str):
     
-    fiche = responses.embed_fiche_patient(nom_prenom)
+    fiche = responses.embed_fiche_patient(nom_prenom.lower())
     
-    await interaction.response.send_message(embed=fiche[0], file=fiche[1])
+    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
 def main():

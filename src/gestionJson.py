@@ -19,19 +19,19 @@ def create_patient(nom: str, prenom: str, age: int):
     return "La fiche du patient à bien été crée !"
 
 
-def ajouter_operation(identifiant: str, nouvelle_date: str, causes: str, consequenses: str):
+def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str):
     try:
         with open('./assets/json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
         
-    if identifiant not in patients : 
+    if identifiant_patient not in patients : 
         return "Patient non touvé !"
 
     # Ajouter la nouvelle opération
-    patients[identifiant]["operations"].append({
-        "id" : len(patients[identifiant]["operations"]) + 1,
+    patients[identifiant_patient]["operations"].append({
+        "id" : len(patients[identifiant_patient]["operations"]) + 1,
         "date": nouvelle_date,
         "causes": causes,
         "consequences" : consequenses
@@ -88,4 +88,5 @@ def get_patient_infos(identifiant: str):
 
 
 if __name__ == '__main__' : 
-    print(get_patient_infos('cailloux_pierre'))
+    supprimer_operation("doe_john",4)
+
