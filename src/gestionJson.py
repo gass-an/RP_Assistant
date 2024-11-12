@@ -1,7 +1,7 @@
 import json
 
 
-def create_patient(nom: str, prenom: str):
+def create_patient(nom: str, prenom: str, age: int):
     try:
         with open('./assets/json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
@@ -11,7 +11,7 @@ def create_patient(nom: str, prenom: str):
     identifiant = f"{nom.lower()}_{prenom.lower()}"
     
     if identifiant not in patients:
-        patients[identifiant] = {"nom": nom, "prenom": prenom, "operations": []}
+        patients[identifiant] = {"nom": nom, "prenom": prenom, "age": age, "operations": []}
 
         with open('./assets/json/patients.json', mode='w') as fichier:
             json.dump(patients, fichier, indent=4)
@@ -87,4 +87,5 @@ def get_patient_infos(identifiant: str):
     return patients[identifiant]
 
 
-#if __name__ == '__main__' : 
+if __name__ == '__main__' : 
+    print(get_patient_infos('cailloux_pierre'))

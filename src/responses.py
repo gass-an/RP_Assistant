@@ -1,6 +1,6 @@
 import random
 import discord
-import images
+import images, gestionJson
 
 
 def ping(interaction: discord.Interaction):
@@ -81,9 +81,6 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
             text_footer = "Réussite critique !" 
         
 
-
-
-
     # création de l'embed 
     embed = discord.Embed(
         title=f":game_die: **Jet de dés pour {username_on_server}** ",
@@ -109,3 +106,29 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
     return [embed,[image_file,thumbnail_file],random_number]
 
 
+def embed_fiche_patient(id_patient: str):
+
+    actual_patient= gestionJson.get_patient_infos(id_patient)
+
+    embed=discord.Embed(
+        title=f"Fiche médicale de {actual_patient['nom']} {actual_patient['prenom']}",
+        description=f"{actual_patient['age']} ans",
+        colour=discord.Color(0xFF0000)
+    )
+
+    embed.set_footer(text=f"Fiche médicale de {actual_patient['nom']} {actual_patient['prenom']}")
+
+    nb_operation = len(actual_patient["operations"])
+    for i in  range(nb_operation): 
+        operation_i = actual_patient["operations"][i]
+        embed.add_field(
+            name=f"{operation_i['id']}. {operation_i['date']} {operation_i['causes']}", 
+            value=f"{operation_i['consequences']}",
+            inline=False
+            )
+        
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+
+    return [embed,thumbnail_file]
