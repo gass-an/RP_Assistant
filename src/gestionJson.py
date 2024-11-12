@@ -13,22 +13,28 @@ def create_patient(nom: str, prenom: str):
     if identifiant not in patients:
         patients[identifiant] = {"nom": nom, "prenom": prenom, "operations": []}
 
-    with open('./assets/json/patients.json', mode='w') as fichier:
-        json.dump(patients, fichier, indent=4)
+        with open('./assets/json/patients.json', mode='w') as fichier:
+            json.dump(patients, fichier, indent=4)
+    
     return "La fiche du patient à bien été crée !"
 
 
-def ajouter_operation(identifiant: str, nouvelle_date: str, nouvelle_operation: str):
+def ajouter_operation(identifiant: str, nouvelle_date: str, causes: str, consequenses: str):
     try:
         with open('./assets/json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
-    
+        
+    if identifiant not in patients : 
+        return "Patient non touvé !"
+
     # Ajouter la nouvelle opération
     patients[identifiant]["operations"].append({
+        "id" : len(patients[identifiant]["operations"]) + 1,
         "date": nouvelle_date,
-        "operation": nouvelle_operation
+        "causes": causes,
+        "consequences" : consequenses
     })
 
     # Sauvegarder les données mises à jour
@@ -37,19 +43,23 @@ def ajouter_operation(identifiant: str, nouvelle_date: str, nouvelle_operation: 
     return "L'opération à bien été ajoutée !" 
 
 
-def supprimer_operation(identifiant: str, nouvelle_date: str, nouvelle_operation: str):
+def supprimer_operation(identifiant: str, id: int):
     try:
         with open('./assets/json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
 
-
+    if identifiant not in patients : 
+        return "Patient non touvé !"
+    
     # Supprimer la nouvelle opération
-    patients[identifiant]["operations"].remove({
-        "date": nouvelle_date,
-        "operation": nouvelle_operation
-    })
+    del patients[identifiant]["operations"][id - 1]
+
+    # Met a jour les id des opérations
+    for i in range (len(patients[identifiant]["operations"])):
+        patients[identifiant]["operations"][i]["id"] = i + 1
+
 
     # Sauvegarder les données mises à jour
     with open('./assets/json/patients.json', mode='w') as fichier:
@@ -76,3 +86,5 @@ def get_patient_infos(identifiant: str):
 
     return patients[identifiant]
 
+
+#if __name__ == '__main__' : 
