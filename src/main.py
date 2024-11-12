@@ -31,7 +31,7 @@ async def on_ready():
 # ----------------- Commandes prises en charges ------------------------------------
 
 # /ping (répond : Pong!) 
-@bot.slash_command(name="ping",description="ping-pong (pour tester le bot)", guild_ids=MY_GUILDS)
+@bot.slash_command(name="ping",description="ping-pong (pour tester le bot)")
 async def ping_command(interaction: discord.Interaction):
     
     answer = responses.ping(interaction)
