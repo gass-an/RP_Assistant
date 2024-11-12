@@ -91,15 +91,6 @@ async def patient_command(interaction: discord.Interaction, nom_prenom: str):
     await interaction.response.send_message(embed=fiche[0], file=fiche[1])
 
 
-
-
-
-
-
-
-
-
-
 def main():
     bot.run(TOKEN)
 
