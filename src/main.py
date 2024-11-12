@@ -23,7 +23,13 @@ bot = commands.Bot(intents=intents)
 # Démarrage du bot
 @bot.event
 async def on_ready():
-    print(f"{bot.user} est en cours d'exécution ")
+    try:
+        # Synchronisation des commandes globales
+        await bot.sync_commands()
+        print("\nLes commandes globales ont été synchronisées.")
+    except Exception as e:
+        print(f"Erreur lors de la synchronisation des commandes : {e}")
+    print(f"{bot.user} est en cours d'exécution !")
 
 
 
