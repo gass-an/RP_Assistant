@@ -2,7 +2,8 @@ from typing import Final, List
 import os 
 from dotenv import load_dotenv
 import discord 
-from discord.ext import commands
+from discord.ext import commands, tasks
+from datetime import datetime, time, timedelta
 import responses, gestionJson
 
 
@@ -10,13 +11,34 @@ import responses, gestionJson
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord_token')
 MY_GUILDS: Final[List[int]] = list(map(int,os.getenv('guild_ids').split(',')))
-
+SAVE_GUILD_ID: Final[int] = int(os.getenv('guild_for_save'))
+SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))
+JSON_FILE_PATH = "./json/patients.json"
 
 
 # Initialiser le bot
 intents = discord.Intents.default()
 intents.message_content = True  # NOQA
 bot = commands.Bot(intents=intents)
+
+
+#@tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
+@tasks.loop(minutes=1)
+async def daily_backup():
+    print(f"Tâche planifiée appelée à {datetime.now()}")
+    guild = bot.get_guild(SAVE_GUILD_ID)
+    channel = guild.get_channel(SAVE_CHANNEL_ID)
+    
+    if os.path.exists(JSON_FILE_PATH):
+
+        with open(JSON_FILE_PATH, "rb") as file:
+            await channel.send(
+                content="Sauvegarde quotidienne du fichier JSON.",
+                file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+            )
+        print(f"Sauvegarde envoyée avec succès dans {channel.name}")
+    else:
+        print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
 
@@ -29,6 +51,8 @@ async def on_ready():
         print("\nLes commandes globales ont été synchronisées.")
     except Exception as e:
         print(f"Erreur lors de la synchronisation des commandes : {e}")
+
+    daily_backup.start()
     print(f"{bot.user} est en cours d'exécution !")
 
 
