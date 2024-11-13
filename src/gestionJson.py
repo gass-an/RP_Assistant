@@ -1,27 +1,27 @@
 import json
 
 
-def create_patient(nom: str, prenom: str, age: int):
+def create_patient(prenom: str, nom: str, age: int, sexe: str):
     try:
-        with open('./assets/json/patients.json', mode='r') as fichier:
+        with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
 
-    identifiant = f"{nom.lower()}_{prenom.lower()}"
-    
-    if identifiant not in patients:
-        patients[identifiant] = {"nom": nom, "prenom": prenom, "age": age, "operations": []}
+    identifiant = f"{prenom.lower()}_{nom.lower()}"
 
-        with open('./assets/json/patients.json', mode='w') as fichier:
+    if identifiant not in patients:
+        patients[identifiant] = {"id_patient":len(patients),"prenom": prenom.capitalize(),"nom": nom.capitalize(), "age": age, "sexe": sexe, "operations": []}
+
+        with open('./json/patients.json', mode='w') as fichier:
             json.dump(patients, fichier, indent=4)
     
-    return "La fiche du patient à bien été crée !"
+    return identifiant
 
 
 def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str):
     try:
-        with open('./assets/json/patients.json', mode='r') as fichier:
+        with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
@@ -38,38 +38,38 @@ def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str,
     })
 
     # Sauvegarder les données mises à jour
-    with open('./assets/json/patients.json', mode='w') as fichier:
+    with open('./json/patients.json', mode='w') as fichier:
         json.dump(patients, fichier, indent=4)
     return "L'opération à bien été ajoutée !" 
 
 
-def supprimer_operation(identifiant: str, id: int):
+def supprimer_operation(identifiant_patient: str, id: int):
     try:
-        with open('./assets/json/patients.json', mode='r') as fichier:
+        with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
 
-    if identifiant not in patients : 
+    if identifiant_patient not in patients : 
         return "Patient non touvé !"
     
     # Supprimer la nouvelle opération
-    del patients[identifiant]["operations"][id - 1]
+    del patients[identifiant_patient]["operations"][id - 1]
 
     # Met a jour les id des opérations
-    for i in range (len(patients[identifiant]["operations"])):
-        patients[identifiant]["operations"][i]["id"] = i + 1
+    for i in range (len(patients[identifiant_patient]["operations"])):
+        patients[identifiant_patient]["operations"][i]["id"] = i + 1
 
 
     # Sauvegarder les données mises à jour
-    with open('./assets/json/patients.json', mode='w') as fichier:
+    with open('./json/patients.json', mode='w') as fichier:
         json.dump(patients, fichier, indent=4)
     return "L'opération à bien été supprimée !" 
 
 
 def get_all_ids():
     try:
-        with open('./assets/json/patients.json', mode='r') as fichier:
+        with open('./json/patients.json', mode='r') as fichier:
                 patients = json.load(fichier)
                 identifiants = list(patients.keys())
                 return identifiants
@@ -79,7 +79,7 @@ def get_all_ids():
 
 def get_patient_infos(identifiant: str):
     try:
-        with open('./assets/json/patients.json', mode='r') as fichier:
+        with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
     except FileNotFoundError:
         patients = {}
@@ -88,5 +88,15 @@ def get_patient_infos(identifiant: str):
 
 
 if __name__ == '__main__' : 
-    supprimer_operation("doe_john",4)
+    # create_patient("John","Doe",35,"Homme")
+    # ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne")
+    # ajouter_operation("john_doe","11-10-2024","Accident de vélo", "Plaies superficielles")
+    # ajouter_operation("john_doe","12-10-2024","Blessure par balle", "Poumon gauche perforé")
+    # ajouter_operation("john_doe","13-10-2024","Greffe", "Greffe Poumon gauche")
+    # ajouter_operation("john_doe","14-10-2024","Rejet Greffe", "Retrait du poumon greffé")
+    # ajouter_operation("john_doe","15-10-2024","Greffe", "Nouvelle greffe du Poumon gauche")
+    # create_patient("stéphane","plaza",40,"Homme")
+    # print(get_patient_infos("john_doe"))
+    # create_patient("arTHUR", "cuiLLERE", 50, "Homme")
 
+    pass

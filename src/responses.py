@@ -111,12 +111,12 @@ def embed_fiche_patient(id_patient: str):
     actual_patient= gestionJson.get_patient_infos(id_patient)
 
     embed=discord.Embed(
-        title=f"{actual_patient['prenom']} {actual_patient['nom']}",
-        description=f"{actual_patient['age']} ans",
+        title=f"Fiche médicale de {actual_patient['prenom']} {actual_patient['nom']}",
+        description=f":page_facing_up: {actual_patient['sexe']} de {actual_patient['age']} ans",
         colour=discord.Color(0xFF0000)
     )
 
-    embed.set_footer(text=f"Fiche médicale de {actual_patient['nom']} {actual_patient['prenom']}")
+    embed.set_footer(text=f"Patient n° {actual_patient['id_patient']} : {actual_patient['prenom']} {actual_patient['nom']}")
 
     nb_operation = len(actual_patient["operations"])
     for i in  range(nb_operation): 
