@@ -22,8 +22,7 @@ intents.message_content = True  # NOQA
 bot = commands.Bot(intents=intents)
 
 
-#@tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
-@tasks.loop(minutes=1)
+@tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
 async def daily_backup():
     print(f"Tâche planifiée appelée à {datetime.now()}")
     guild = bot.get_guild(SAVE_GUILD_ID)
