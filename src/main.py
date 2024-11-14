@@ -16,13 +16,18 @@ SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))  # channel pour
 JSON_FILE_PATH = "./json/patients.json"
 CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
 CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
+GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
+ROLE_FOR_NEW_MEMBERS: Final[int] = int(os.getenv('role_for_new_members'))
 
 
 # Initialiser le bot
 intents = discord.Intents.default()
 intents.message_content = True  # NOQA
+intents.guilds = True
+intents.members = True
 bot = commands.Bot(intents=intents)
 
+# --------------------------- Envoie le json à 12h tous les jours ------------------------------------
 
 @tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
 async def daily_backup():
@@ -58,6 +63,29 @@ async def on_ready():
 
 
 
+# --------------------------- Gestion des rôles ------------------------------------
+# ajoute un rôle au nouveaux arrivants
+@bot.event
+async def on_member_join(member: discord.Member):
+
+    if member.guild.id == GUILD_FOR_BOT_UTILISATION :
+    
+        role = member.guild.get_role(ROLE_FOR_NEW_MEMBERS)
+        if role:
+            try:
+                # Ajoute le rôle au nouveau membre
+                await member.add_roles(role)
+                print(f"Le rôle {role.name} a été ajouté à {member.display_name}")
+            
+            except discord.errors.Forbidden:
+                print("Le bot n'a pas les permissions nécessaires pour attribuer le rôle.")
+            
+            except Exception as e:
+                print(f"Une erreur est survenue : {e}")
+        else:
+            print("Le rôle spécifié n'existe pas.")
+    else: 
+        print("Le rôle n'a pas pu être attribué, ce n'est pas le serveur attendu ! ")
 
 # --------------------------- Commandes prises en charges ------------------------------------
 
