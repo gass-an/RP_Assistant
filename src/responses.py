@@ -14,6 +14,37 @@ def ping(interaction: discord.Interaction):
 
     return "Pong !"
 
+def help():
+    embed=discord.Embed(
+        title="Le /help",
+        description="C'est ici qu'est répertorié chaque fonctionnalité du bot !",
+        colour=discord.Color(0xFFFFFF)
+    )
+
+    embed.set_footer(text="En éspérant avoir aidé")
+    
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /ping', value='ping-pong (pour tester le bot)',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /roll', value='Fait un jet de dés : D20',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /roll2', value='Fait un jet de dés personalisé',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /afficher_patient', value='Affiche la fiche médicale du patient \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /creer_patient', value='Créer un nouveau patient et affiche sa fiche médicale (vierge) \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /ajouter_operation', value='Ajoute une opération au patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /supprimer_operation', value='Supprime une opération du patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+    return [embed,thumbnail_file]
+
+
 
 def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
 

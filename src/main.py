@@ -88,6 +88,13 @@ async def on_member_join(member: discord.Member):
         print("Le rôle n'a pas pu être attribué, ce n'est pas le serveur attendu ! ")
 
 # --------------------------- Commandes prises en charges ------------------------------------
+# /help  
+@bot.slash_command(name="help",description="répertorie les commandes du bot", guild_ids=MY_GUILDS)
+async def ping_command(interaction: discord.Interaction):
+    
+    answer = responses.help()
+    await interaction.response.send_message(embed=answer[0], file=answer[1])
+
 
 # /ping (répond : Pong!) 
 @bot.slash_command(name="ping",description="ping-pong (pour tester le bot)")
