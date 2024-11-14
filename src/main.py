@@ -7,13 +7,15 @@ from datetime import datetime, time, timedelta
 import responses, gestionJson
 
 
-# Récupérer le token + les ids des serveurs
+# Récupérer le token + les ids des serveurs / channels / rôles 
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord_token')
 MY_GUILDS: Final[List[int]] = list(map(int,os.getenv('guild_ids').split(',')))
 SAVE_GUILD_ID: Final[int] = int(os.getenv('guild_for_save'))
-SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))
+SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))  # channel pour save-auto du json
 JSON_FILE_PATH = "./json/patients.json"
+CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
+CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
 
 
 # Initialiser le bot
@@ -72,14 +74,19 @@ async def ping_command(interaction: discord.Interaction):
 @bot.slash_command(name="roll",description="Fait un jet de dés : D20", guild_ids=MY_GUILDS)
 async def roll_command(interaction: discord.Interaction):
 
-    nb_faces = 20
-    answer = responses.roll(interaction, nb_faces, text_on_dice=True)
-    
-    if isinstance(answer[0], discord.Embed) :
-        await interaction.response.send_message(embed=answer[0], files=answer[1])
-        os.remove(f"./images/{answer[2]}.png")
+    if interaction.channel_id != CHANNEL_FOR_ROLL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
     else :
-        await interaction.response.send_message(answer)
+        nb_faces = 20
+        answer = responses.roll(interaction, nb_faces, text_on_dice=True)
+        
+        if isinstance(answer[0], discord.Embed) :
+            await interaction.response.send_message(embed=answer[0], files=answer[1])
+            os.remove(f"./images/{answer[2]}.png")
+        else :
+            await interaction.response.send_message(answer)
 
 
 
@@ -88,13 +95,18 @@ async def roll_command(interaction: discord.Interaction):
 @discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
 async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
-    answer = responses.roll(interaction, nb_faces, text_on_dice=False)
-    
-    if isinstance(answer[0], discord.Embed) :
-        await interaction.response.send_message(embed=answer[0], files=answer[1])
-        os.remove(f"./images/{answer[2]}.png")
+    if interaction.channel_id != CHANNEL_FOR_ROLL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
     else :
-        await interaction.response.send_message(answer)
+        answer = responses.roll(interaction, nb_faces, text_on_dice=False)
+        
+        if isinstance(answer[0], discord.Embed) :
+            await interaction.response.send_message(embed=answer[0], files=answer[1])
+            os.remove(f"./images/{answer[2]}.png")
+        else :
+            await interaction.response.send_message(answer)
 
 
 
@@ -107,11 +119,16 @@ async def nom_autocomplete(interaction: discord.AutocompleteContext):
 # /afficher_patient -> Affiche la fiche médicale du patient 
 @bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
+@commands.has_role("Equipe médicale")
 async def patient_command(interaction: discord.Interaction, prenom_nom: str):
-    
-    fiche = responses.embed_fiche_patient(prenom_nom.lower())
-    
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+    else :
+        fiche = responses.embed_fiche_patient(prenom_nom.lower())
+        
+        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
 
@@ -121,12 +138,17 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
 @discord.option("nom", str, description= "Nom du patient")
 @discord.option("age", int, description= "Âge du patient")
 @discord.option("sexe", str, description= "Sexe du patient", choices=["Femme","Homme","Autre"])
+@commands.has_role("Médecin")
 async def create_patient_command(interaction: discord.Interaction, prenom: str, nom: str, age: int, sexe: str):
-
-    id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe)
-    
-    fiche = responses.embed_fiche_patient(id_patient.lower())
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+    else :
+        id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe)
+        
+        fiche = responses.embed_fiche_patient(id_patient.lower())
+        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
 
@@ -136,10 +158,17 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
 @discord.option("consequences", str, description= "Bref bilan médical")
+@commands.has_role("Médecin")
 async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str):
-    gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences)
-    fiche = responses.embed_fiche_patient(prenom_nom.lower())
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+    else :
+    
+        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences)
+        fiche = responses.embed_fiche_patient(prenom_nom.lower())
+        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
 
@@ -147,13 +176,34 @@ async def add_operation_command(interaction: discord.Interaction, prenom_nom: st
 @bot.slash_command(name="supprimer_operation", description="Supprime une opération du patient et affiche sa nouvelle fiche médicale", guild_ids=MY_GUILDS)
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 @discord.option("id_operation", int, description= "N° de l'opération à supprimer (affiché sur sa fiche médicale)")
+@commands.has_role("Médecin")
 async def del_operation_command(interaction: discord.Interaction, prenom_nom: str, id_operation: int):
-    gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
-    fiche = responses.embed_fiche_patient(prenom_nom.lower())
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+    else :
+   
+        gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
+        fiche = responses.embed_fiche_patient(prenom_nom.lower())
+        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
 
+
+# --------------------------- Gestion des erreurs de permissions  ------------------------------------
+@bot.event
+async def on_application_command_error(interaction: discord.Interaction, error):
+    if isinstance(error, commands.MissingRole):
+        await interaction.response.send_message(
+            "Vous n'avez pas le rôle requis pour utiliser cette commande.",
+            ephemeral=True
+        )
+    else:
+        await interaction.response.send_message(
+            "Une erreur est survenue lors de l'exécution de la commande.",
+            ephemeral=True
+        )
 
 
 def main():
