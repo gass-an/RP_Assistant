@@ -211,11 +211,17 @@ async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
 
 
-# fonction pour l'autocompletion des ids (prenom_nom) des patients dans le /patient 
+# ----- fonctions pour l'autocompletion ----- 
+# ids (prenom_nom) des patients dans le /patient 
 async def nom_autocomplete(interaction: discord.AutocompleteContext):
     user_input = interaction.value.lower()
     all_ids=gestionJson.get_all_ids()
     return [id for id in all_ids if user_input in id.lower()][:25]
+
+async def medic_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_medics_display_name()
+    return display_names
+
 
 # /afficher_patient -> Affiche la fiche médicale du patient 
 @bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
@@ -259,7 +265,7 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
 @discord.option("consequences", str, description= "Bref bilan médical")
-@discord.option("medecin", str, description= "Médecin qui à pris en charge le patient", choices=gestionJson.get_medics_display_name(), required=False, default=None)
+@discord.option("medecin", str, description= "Médecin qui à pris en charge le patient", autocomplete=medic_autocomplete, required=False, default=None)
 @commands.has_role(ROLE_MEDECIN)
 async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str, medecin=None):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
