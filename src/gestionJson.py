@@ -87,6 +87,21 @@ def get_patient_infos(identifiant: str):
     return patients[identifiant]
 
 
+def load_medic_json():
+    try:
+        with open('./json/medecins.json', mode='r') as fichier:
+            return json.load(fichier)
+    except FileNotFoundError:
+        return []
+
+
+def save_medic_json(data):
+    with open('./json/medecins.json', mode='w') as fichier:
+        json.dump(data, fichier, indent=4)
+
+
+
+
 if __name__ == '__main__' : 
     # create_patient("John","Doe",35,"Homme")
     # ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne")

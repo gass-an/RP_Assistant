@@ -68,8 +68,14 @@ async def on_ready():
         print(f"Erreur lors de la synchronisation des commandes : {e}")
 
     daily_backup.start()
-    print(f"{bot.user} est en cours d'exécution !")
 
+    guild = bot.get_guild(GUILD_FOR_BOT_UTILISATION) 
+    role = guild.get_role(ROLE_MEDECIN)
+
+    data = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role.members]
+    gestionJson.save_medic_json(data)
+    
+    print(f"{bot.user} est en cours d'exécution !")
 
 
 # --------------------------- Gestion des rôles ------------------------------------
@@ -96,6 +102,36 @@ async def on_member_join(member: discord.Member):
     else: 
         print("Le rôle n'a pas pu être attribué, ce n'est pas le serveur attendu ! ")
 
+
+# met a jour le fichier medecins.json en fonction des changmement de pseudo et des changements de rôles
+@bot.event
+async def on_member_update(before: discord.Member, after: discord.Member):
+    print('Appel fonction')
+    before_roles = {role.id for role in before.roles}
+    after_roles = {role.id for role in after.roles}
+
+    role_added = ROLE_MEDECIN in after_roles and ROLE_MEDECIN not in before_roles
+    role_removed = ROLE_MEDECIN in before_roles and ROLE_MEDECIN not in after_roles
+
+    data = gestionJson.load_medic_json()
+    updated = False
+
+    if role_added:
+        data.append({"id": after.id, "name": after.name, "display": after.display_name})
+        updated = True
+
+    if role_removed:
+        data = [member for member in data if member["id"] != after.id]
+        updated = True
+
+    if any(role.id == ROLE_MEDECIN for role in after.roles) and before.display_name != after.display_name:
+        for member in data:
+            if member["id"] == after.id:
+                member["display"] = after.display_name
+                updated = True
+
+    if updated:
+        gestionJson.save_medic_json(data)
 
 
 # --------------------------- Commandes prises en charges ------------------------------------
