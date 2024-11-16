@@ -14,6 +14,7 @@ def ping(interaction: discord.Interaction):
 
     return "Pong !"
 
+
 def help():
     embed=discord.Embed(
         title="Le /help",
@@ -25,6 +26,8 @@ def help():
     
     embed.add_field(name='', value='',inline=False)
     embed.add_field(name=':white_circle: /ping', value='ping-pong (pour tester le bot)',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /rename', value='Permet de se renommer en gardant une syntaxe utile pour le bot',inline=False)
     embed.add_field(name='', value='',inline=False)
     embed.add_field(name=':white_circle: /roll', value='Fait un jet de dés : D20',inline=False)
     embed.add_field(name='', value='',inline=False)
@@ -43,7 +46,6 @@ def help():
     thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
     embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
     return [embed,thumbnail_file]
-
 
 
 def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):

@@ -7,42 +7,51 @@ from datetime import datetime, time, timedelta
 import responses, gestionJson
 
 
-# Récupérer le token + les ids des serveurs / channels / rôles 
+# --------------------------- Récupération des infos dans le .env  (Token / ids) ---------------------
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord_token')
 MY_GUILDS: Final[List[int]] = list(map(int,os.getenv('guild_ids').split(',')))
+
+# Pour save
 SAVE_GUILD_ID: Final[int] = int(os.getenv('guild_for_save'))
-SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))  # channel pour save-auto du json
-JSON_FILE_PATH = "./json/patients.json"
+SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save')) 
+
+# Pour les permissions du bot
 CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
 CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
 GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
+
+# Rôles
 ROLE_FOR_NEW_MEMBERS: Final[int] = int(os.getenv('role_for_new_members'))
+ROLE_MEDECIN: Final[int] = int(os.getenv('role_medecin'))
+ROLE_EQUIPE_MED: Final[int] = int(os.getenv('role_equipe_med'))
 
 
-# Initialiser le bot
+
+# --------------------------- Initialisation du bot  -------------------------------------------------
 intents = discord.Intents.default()
 intents.message_content = True  # NOQA
 intents.guilds = True
 intents.members = True
 bot = commands.Bot(intents=intents)
 
+
+
+
 # --------------------------- Envoie le json à 12h tous les jours ------------------------------------
 
 @tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
 async def daily_backup():
-    print(f"Tâche planifiée appelée à {datetime.now()}")
     guild = bot.get_guild(SAVE_GUILD_ID)
     channel = guild.get_channel(SAVE_CHANNEL_ID)
     
-    if os.path.exists(JSON_FILE_PATH):
+    if os.path.exists("./json/patients.json"):
 
-        with open(JSON_FILE_PATH, "rb") as file:
+        with open("./json/patients.json", "rb") as file:
             await channel.send(
-                content="Sauvegarde quotidienne du fichier JSON.",
+                content="Sauvegarde quotidienne du fichier Patients.",
                 file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
             )
-        print(f"Sauvegarde envoyée avec succès dans {channel.name}")
     else:
         print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
@@ -87,21 +96,42 @@ async def on_member_join(member: discord.Member):
     else: 
         print("Le rôle n'a pas pu être attribué, ce n'est pas le serveur attendu ! ")
 
+
+
 # --------------------------- Commandes prises en charges ------------------------------------
 # /help  
-@bot.slash_command(name="help",description="répertorie les commandes du bot", guild_ids=MY_GUILDS)
+@bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=MY_GUILDS)
 async def ping_command(interaction: discord.Interaction):
     
     answer = responses.help()
     await interaction.response.send_message(embed=answer[0], file=answer[1])
 
 
+
 # /ping (répond : Pong!) 
-@bot.slash_command(name="ping",description="ping-pong (pour tester le bot)")
+@bot.slash_command(name="ping",description="Ping-pong (pour tester le bot)")
 async def ping_command(interaction: discord.Interaction):
     
     answer = responses.ping(interaction)
     await interaction.response.send_message(answer)
+
+
+
+# /rename -> renomme les gens en "Prenom Nom"  (ne fonctionne pas avec le proprio du serv)
+@bot.slash_command(name="rename",description="Permet de se renommer en gardant une syntaxe utile pour le bot", guild_ids=MY_GUILDS)
+@discord.option("prenom_rp", str, description= "Votre prénom")
+@discord.option("nom_rp", str, description= "Votre nom")
+async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_rp: str):
+    try :
+        new_nickname = f"{prenom_rp.capitalize()} {nom_rp.capitalize()}"    
+        await interaction.user.edit(nick=new_nickname)
+        await interaction.response.send_message("Votre pseudonyme a été mis à jour !",ephemeral=True)
+    
+    except discord.errors.Forbidden:
+        await interaction.response.send_message(
+            "Je n'ai pas la permission de modifier votre pseudonyme.",
+            ephemeral=True
+        )
 
 
 
@@ -154,7 +184,7 @@ async def nom_autocomplete(interaction: discord.AutocompleteContext):
 # /afficher_patient -> Affiche la fiche médicale du patient 
 @bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
-@commands.has_role("Equipe médicale")
+@commands.has_role(ROLE_EQUIPE_MED)
 async def patient_command(interaction: discord.Interaction, prenom_nom: str):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
@@ -173,7 +203,7 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
 @discord.option("nom", str, description= "Nom du patient")
 @discord.option("age", int, description= "Âge du patient")
 @discord.option("sexe", str, description= "Sexe du patient", choices=["Femme","Homme","Autre"])
-@commands.has_role("Médecin")
+@commands.has_role(ROLE_MEDECIN)
 async def create_patient_command(interaction: discord.Interaction, prenom: str, nom: str, age: int, sexe: str):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
@@ -193,7 +223,7 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
 @discord.option("consequences", str, description= "Bref bilan médical")
-@commands.has_role("Médecin")
+@commands.has_role(ROLE_MEDECIN)
 async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
@@ -211,7 +241,7 @@ async def add_operation_command(interaction: discord.Interaction, prenom_nom: st
 @bot.slash_command(name="supprimer_operation", description="Supprime une opération du patient et affiche sa nouvelle fiche médicale", guild_ids=MY_GUILDS)
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 @discord.option("id_operation", int, description= "N° de l'opération à supprimer (affiché sur sa fiche médicale)")
-@commands.has_role("Médecin")
+@commands.has_role(ROLE_MEDECIN)
 async def del_operation_command(interaction: discord.Interaction, prenom_nom: str, id_operation: int):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
