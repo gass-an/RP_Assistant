@@ -11,6 +11,7 @@ import responses, gestionJson
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord_token')
 MY_GUILDS: Final[List[int]] = list(map(int,os.getenv('guild_ids').split(',')))
+MY_ID: Final[int] = int(os.getenv('my_id'))
 
 # Pour save
 SAVE_GUILD_ID: Final[int] = int(os.getenv('guild_for_save'))
@@ -295,6 +296,14 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
+# /manual_save -> Envoie le patients.json disponible que dans 'SAVE_GUILD_ID'
+@bot.slash_command(name="manual_save", description="envoie le json", guild_ids=[SAVE_GUILD_ID])
+async def manual_save_command(interaction: discord.Interaction):
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+    else:
+        await daily_backup()
+        await interaction.response.send_message("Fichier json correctement envoyé !", ephemeral=True)
 
 
 # --------------------------- Gestion des erreurs de permissions  ------------------------------------
