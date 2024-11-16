@@ -157,7 +157,7 @@ def embed_fiche_patient(id_patient: str):
         embed.add_field(name='', value='',inline=False)
         embed.add_field(
             name=f"\n\n :red_circle: Opération n°{operation_i['id']} : {operation_i['causes']} ", 
-            value=f"** Date : ** {operation_i['date']} \n  {operation_i['consequences' ]} ",
+            value=f"** Date : ** {operation_i['date']} \n  {operation_i['consequences' ]} \n ** Médecin : ** {operation_i['medecin']}",
             inline=False
             )
         

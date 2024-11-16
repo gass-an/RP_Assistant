@@ -19,7 +19,7 @@ def create_patient(prenom: str, nom: str, age: int, sexe: str):
     return identifiant
 
 
-def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str):
+def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str, medecin: str, editor: str):
     try:
         with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
@@ -34,7 +34,9 @@ def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str,
         "id" : len(patients[identifiant_patient]["operations"]) + 1,
         "date": nouvelle_date,
         "causes": causes,
-        "consequences" : consequenses
+        "consequences" : consequenses,
+        "medecin" : medecin,
+        "editor" : editor,
     })
 
     # Sauvegarder les données mises à jour
@@ -100,18 +102,23 @@ def save_medic_json(data):
         json.dump(data, fichier, indent=4)
 
 
+def get_medics_display_name():
+    data = load_medic_json()
+    display_names = [data[i]["display"] for i in range(len(data))]
+    return display_names
+
 
 
 if __name__ == '__main__' : 
-    # create_patient("John","Doe",35,"Homme")
-    # ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne")
-    # ajouter_operation("john_doe","11-10-2024","Accident de vélo", "Plaies superficielles")
-    # ajouter_operation("john_doe","12-10-2024","Blessure par balle", "Poumon gauche perforé")
-    # ajouter_operation("john_doe","13-10-2024","Greffe", "Greffe Poumon gauche")
-    # ajouter_operation("john_doe","14-10-2024","Rejet Greffe", "Retrait du poumon greffé")
-    # ajouter_operation("john_doe","15-10-2024","Greffe", "Nouvelle greffe du Poumon gauche")
-    # create_patient("stéphane","plaza",40,"Homme")
-    # print(get_patient_infos("john_doe"))
-    # create_patient("arTHUR", "cuiLLERE", 50, "Homme")
-
+    create_patient("John","Doe",35,"Homme")
+    ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne", "Faucon", "Faucon")
+    ajouter_operation("john_doe","11-10-2024","Accident de vélo", "Plaies superficielles","Faucon", "Faucon")
+    ajouter_operation("john_doe","12-10-2024","Blessure par balle", "Poumon gauche perforé","Faucon", "Faucon")
+    ajouter_operation("john_doe","13-10-2024","Greffe", "Greffe Poumon gauche","Faucon", "Faucon")
+    ajouter_operation("john_doe","14-10-2024","Rejet Greffe", "Retrait du poumon greffé","Faucon", "Faucon")
+    ajouter_operation("john_doe","15-10-2024","Greffe", "Nouvelle greffe du Poumon gauche","Faucon", "Faucon")
+    create_patient("stéphane","plaza",40,"Homme")
+    print(get_patient_infos("john_doe"))
+    create_patient("arTHUR", "cuiLLERE", 50, "Homme")
+    get_medics_display_name()
     pass

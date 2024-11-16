@@ -259,15 +259,20 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
 @discord.option("consequences", str, description= "Bref bilan médical")
+@discord.option("medecin", str, description= "Médecin qui à pris en charge le patient", choices=gestionJson.get_medics_display_name(), required=False, default=None)
 @commands.has_role(ROLE_MEDECIN)
-async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str):
+async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str, medecin=None):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-    
-        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences)
+        if medecin == None :
+            medecin = interaction.user.display_name
+        
+        editor = interaction.user.display_name
+        
+        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences, medecin=medecin, editor=editor)
         fiche = responses.embed_fiche_patient(prenom_nom.lower())
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
