@@ -106,7 +106,7 @@ async def on_member_join(member: discord.Member):
 # met a jour le fichier medecins.json en fonction des changmement de pseudo et des changements de rôles
 @bot.event
 async def on_member_update(before: discord.Member, after: discord.Member):
-    print('Appel fonction')
+
     before_roles = {role.id for role in before.roles}
     after_roles = {role.id for role in after.roles}
 
