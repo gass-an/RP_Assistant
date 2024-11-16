@@ -1,9 +1,8 @@
 from typing import Final, List
-import os 
+import os,discord, json
 from dotenv import load_dotenv
-import discord 
 from discord.ext import commands, tasks
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 import responses, gestionJson
 
 
@@ -138,7 +137,7 @@ async def on_member_update(before: discord.Member, after: discord.Member):
 # --------------------------- Commandes prises en charges ------------------------------------
 # /help  
 @bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=MY_GUILDS)
-async def ping_command(interaction: discord.Interaction):
+async def help_command(interaction: discord.Interaction):
     
     answer = responses.help()
     await interaction.response.send_message(embed=answer[0], file=answer[1])
@@ -296,6 +295,7 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
+
 # /manual_save -> Envoie le patients.json disponible que dans 'SAVE_GUILD_ID'
 @bot.slash_command(name="manual_save", description="envoie le json", guild_ids=[SAVE_GUILD_ID])
 async def manual_save_command(interaction: discord.Interaction):
@@ -304,6 +304,33 @@ async def manual_save_command(interaction: discord.Interaction):
     else:
         await daily_backup()
         await interaction.response.send_message("Fichier json correctement envoyé !", ephemeral=True)
+
+
+@bot.slash_command(name="insert_json",description="remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
+@discord.option("message_id", str, description= "Id du message contenant le json")
+async def insert_json_command(interaction: discord.Interaction, message_id: str ):
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+    else:
+        guild = bot.get_guild(SAVE_GUILD_ID)
+        channel = guild.get_channel(SAVE_CHANNEL_ID)
+        message = await channel.fetch_message(message_id)
+        attachment = message.attachments[0]
+        
+        file_path = f"./json/temp_{attachment.filename}"
+        await attachment.save(file_path)
+
+
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        file.close()
+
+
+        with open('./json/patients.json', mode='w') as fichier:
+            json.dump(data, fichier, indent=4)
+
+        os.remove(file_path)
+        await interaction.response.send_message("Le json à bien été remplacé", ephemeral=True)
 
 
 # --------------------------- Gestion des erreurs de permissions  ------------------------------------
