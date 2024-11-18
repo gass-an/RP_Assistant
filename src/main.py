@@ -326,6 +326,7 @@ async def manual_save_command(interaction: discord.Interaction):
         await interaction.response.send_message("Fichier json correctement envoyé !", ephemeral=True)
 
 
+# /insert_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
 @bot.slash_command(name="insert_json",description="remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
 @discord.option("message_id", str, description= "Id du message contenant le json")
 async def insert_json_command(interaction: discord.Interaction, message_id: str ):
