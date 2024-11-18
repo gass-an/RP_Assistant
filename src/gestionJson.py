@@ -1,7 +1,7 @@
 import json
 
 
-def create_patient(prenom: str, nom: str, age: int, sexe: str):
+def create_patient(prenom: str, nom: str, age: int, sexe: str, creator: str):
     try:
         with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
@@ -11,7 +11,15 @@ def create_patient(prenom: str, nom: str, age: int, sexe: str):
     identifiant = f"{prenom.lower()}_{nom.lower()}"
 
     if identifiant not in patients:
-        patients[identifiant] = {"id_patient":len(patients),"prenom": prenom.capitalize(),"nom": nom.capitalize(), "age": age, "sexe": sexe, "operations": []}
+        patients[identifiant] = {
+            "id_patient":len(patients),
+            "prenom": prenom.capitalize(),
+            "nom": nom.capitalize(), 
+            "age": age,
+            "sexe": sexe,
+            "enregistre_par": creator, 
+            "operations": []
+            }
 
         with open('./json/patients.json', mode='w') as fichier:
             json.dump(patients, fichier, indent=4)
@@ -19,7 +27,7 @@ def create_patient(prenom: str, nom: str, age: int, sexe: str):
     return identifiant
 
 
-def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str, medecin: str, editor: str):
+def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str, consequenses: str, medecin: str, editor: str, discord_name: str):
     try:
         with open('./json/patients.json', mode='r') as fichier:
             patients = json.load(fichier)
@@ -37,6 +45,7 @@ def ajouter_operation(identifiant_patient: str, nouvelle_date: str, causes: str,
         "consequences" : consequenses,
         "medecin" : medecin,
         "editor" : editor,
+        "discord_name": discord_name
     })
 
     # Sauvegarder les données mises à jour
@@ -106,7 +115,6 @@ def get_medics_display_name():
     data = load_medic_json()
     display_names = [data[i]["display"] for i in range(len(data))]
     return display_names
-
 
 
 if __name__ == '__main__' : 

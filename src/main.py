@@ -133,6 +133,19 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     if updated:
         gestionJson.save_medic_json(data)
 
+        guild = bot.get_guild(SAVE_GUILD_ID)
+        channel = guild.get_channel(SAVE_CHANNEL_ID)
+        
+        if os.path.exists("./json/medecins.json"):
+
+            with open("./json/medecins.json", "rb") as file:
+                await channel.send(
+                    content="Sauvegarde du fichier Medecins suite à une mise à jour.",
+                    file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+                )
+        else:
+            print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
+
 
 # --------------------------- Commandes prises en charges ------------------------------------
 # /help  
@@ -252,7 +265,8 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-        id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe)
+        creator = interaction.user.name
+        id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe, creator=creator)
         
         fiche = responses.embed_fiche_patient(id_patient.lower())
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
@@ -277,8 +291,8 @@ async def add_operation_command(interaction: discord.Interaction, prenom_nom: st
             medecin = interaction.user.display_name
         
         editor = interaction.user.display_name
-        
-        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences, medecin=medecin, editor=editor)
+        creator = interaction.user.name
+        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences, medecin=medecin, editor=editor, discord_name=creator)
         fiche = responses.embed_fiche_patient(prenom_nom.lower())
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
