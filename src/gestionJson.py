@@ -100,20 +100,21 @@ def get_patient_infos(identifiant: str):
 
 def load_medic_json():
     try:
-        with open('./json/medecins.json', mode='r') as fichier:
+        with open('./json/roles.json', mode='r') as fichier:
             return json.load(fichier)
     except FileNotFoundError:
         return []
 
 
 def save_medic_json(data):
-    with open('./json/medecins.json', mode='w') as fichier:
+    with open('./json/roles.json', mode='w') as fichier:
         json.dump(data, fichier, indent=4)
 
 
 def get_medics_display_name():
-    data = load_medic_json()
-    display_names = [data[i]["display"] for i in range(len(data))]
+    json_data = load_medic_json()
+    medics = json_data.get("medic",[])
+    display_names = [medic["display"] for medic in medics]
     return display_names
 
 

@@ -70,10 +70,10 @@ async def on_ready():
     daily_backup.start()
 
     guild = bot.get_guild(GUILD_FOR_BOT_UTILISATION) 
-    role = guild.get_role(ROLE_MEDECIN)
+    role_medic = guild.get_role(ROLE_MEDECIN)
 
-    data = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role.members]
-    gestionJson.save_medic_json(data)
+    data_medic = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_medic.members]
+    gestionJson.save_medic_json({"medic" : data_medic})
     
     print(f"{bot.user} est en cours d'exécution !")
 
@@ -110,37 +110,42 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     before_roles = {role.id for role in before.roles}
     after_roles = {role.id for role in after.roles}
 
-    role_added = ROLE_MEDECIN in after_roles and ROLE_MEDECIN not in before_roles
-    role_removed = ROLE_MEDECIN in before_roles and ROLE_MEDECIN not in after_roles
+    role_medic_added = ROLE_MEDECIN in after_roles and ROLE_MEDECIN not in before_roles
+    role_medic_removed = ROLE_MEDECIN in before_roles and ROLE_MEDECIN not in after_roles
 
-    data = gestionJson.load_medic_json()
+    json_data = gestionJson.load_medic_json()
+    data_medic = json_data.get("medic",[])
     updated = False
 
-    if role_added:
-        data.append({"id": after.id, "name": after.name, "display": after.display_name})
+    if role_medic_added:
+        data_medic.append({
+            "id": after.id, 
+            "name": after.name, 
+            "display": after.display_name
+            })
         updated = True
 
-    if role_removed:
-        data = [member for member in data if member["id"] != after.id]
+    if role_medic_removed:
+        data_medic = [member for member in data_medic if member["id"] != after.id]
         updated = True
 
     if any(role.id == ROLE_MEDECIN for role in after.roles) and before.display_name != after.display_name:
-        for member in data:
+        for member in data_medic:
             if member["id"] == after.id:
                 member["display"] = after.display_name
                 updated = True
 
     if updated:
-        gestionJson.save_medic_json(data)
+        gestionJson.save_medic_json({"medic" : data_medic})
 
         guild = bot.get_guild(SAVE_GUILD_ID)
         channel = guild.get_channel(SAVE_CHANNEL_ID)
         
-        if os.path.exists("./json/medecins.json"):
+        if os.path.exists("./json/roles.json"):
 
-            with open("./json/medecins.json", "rb") as file:
+            with open("./json/roles.json", "rb") as file:
                 await channel.send(
-                    content="Sauvegarde du fichier Medecins suite à une mise à jour.",
+                    content="Sauvegarde du fichier Rôles suite à une mise à jour.",
                     file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
                 )
         else:
