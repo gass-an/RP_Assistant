@@ -22,9 +22,10 @@ CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
 GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
 
 # Rôles
-ROLE_FOR_NEW_MEMBERS: Final[int] = int(os.getenv('role_for_new_members'))
+ROLE_PATIENT: Final[int] = int(os.getenv('role_patient'))
 ROLE_MEDECIN: Final[int] = int(os.getenv('role_medecin'))
 ROLE_EQUIPE_MED: Final[int] = int(os.getenv('role_equipe_med'))
+ROLE_CHIRURGIEN: Final[int] = int(os.getenv('role_chirurgien'))
 
 
 
@@ -71,9 +72,11 @@ async def on_ready():
 
     guild = bot.get_guild(GUILD_FOR_BOT_UTILISATION) 
     role_medic = guild.get_role(ROLE_MEDECIN)
+    role_chirurgien = guild.get_role(ROLE_CHIRURGIEN)
 
     data_medic = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_medic.members]
-    gestionJson.save_medic_json({"medic" : data_medic})
+    data_chirurgien = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_chirurgien.members]
+    gestionJson.save_medic_json({"medic" : data_medic, "chirurgien" : data_chirurgien })
     
     print(f"{bot.user} est en cours d'exécution !")
 
@@ -85,7 +88,7 @@ async def on_member_join(member: discord.Member):
 
     if member.guild.id == GUILD_FOR_BOT_UTILISATION :
     
-        role = member.guild.get_role(ROLE_FOR_NEW_MEMBERS)
+        role = member.guild.get_role(ROLE_PATIENT)
         if role:
             try:
                 # Ajoute le rôle au nouveau membre
@@ -113,8 +116,12 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     role_medic_added = ROLE_MEDECIN in after_roles and ROLE_MEDECIN not in before_roles
     role_medic_removed = ROLE_MEDECIN in before_roles and ROLE_MEDECIN not in after_roles
 
+    role_chirurgien_added = ROLE_CHIRURGIEN in after_roles and ROLE_CHIRURGIEN not in before_roles
+    role_chirurgien_removed = ROLE_CHIRURGIEN in before_roles and ROLE_CHIRURGIEN not in after_roles
+
     json_data = gestionJson.load_medic_json()
     data_medic = json_data.get("medic",[])
+    data_chirurgien = json_data.get("chirurgien",[])
     updated = False
 
     if role_medic_added:
@@ -135,8 +142,27 @@ async def on_member_update(before: discord.Member, after: discord.Member):
                 member["display"] = after.display_name
                 updated = True
 
+
+    if role_chirurgien_added:
+        data_chirurgien.append({
+            "id": after.id, 
+            "name": after.name, 
+            "display": after.display_name
+            })
+        updated = True
+
+    if role_chirurgien_removed:
+        data_chirurgien = [member for member in data_chirurgien if member["id"] != after.id]
+        updated = True
+
+    if any(role.id == ROLE_CHIRURGIEN for role in after.roles) and before.display_name != after.display_name:
+        for member in data_chirurgien:
+            if member["id"] == after.id:
+                member["display"] = after.display_name
+                updated = True
+
     if updated:
-        gestionJson.save_medic_json({"medic" : data_medic})
+        gestionJson.save_medic_json({"medic" : data_medic, "chirurgien" : data_chirurgien })
 
         guild = bot.get_guild(SAVE_GUILD_ID)
         channel = guild.get_channel(SAVE_CHANNEL_ID)
