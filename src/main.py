@@ -393,8 +393,11 @@ async def formation_command(interaction: discord.Interaction, formation: str):
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
         return
+    
+    #Permet de laisser le temps à la fonction pour préparer l'embed
+    await interaction.response.defer()
     fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
@@ -437,8 +440,10 @@ async def add_formation_command(interaction: discord.Interaction, formation: str
         discord_name=discord_name
     )
 
+    #Permet de laisser le temps à la fonction pour préparer l'embed
+    await interaction.response.defer()
     fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
@@ -457,8 +462,10 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
     
     gestionJson.supprimer_formation(identifiant_formation=formation, id=id_formation)
 
+    #Permet de laisser le temps à la fonction pour préparer l'embed
+    await interaction.response.defer()
     fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
