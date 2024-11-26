@@ -98,7 +98,62 @@ def get_patient_infos(identifiant: str):
     return patients[identifiant]
 
 
-def load_medic_json():
+def ajouter_formation(identifiant_formation: str, prenom_nom: str, date: str, valideur: str, editor: str, discord_name: str):
+    try:
+        with open('./json/formation.json', mode='r') as fichier:
+            formations = json.load(fichier)
+    except FileNotFoundError:
+        formations = {} 
+
+    if identifiant_formation not in formations:
+        formations[identifiant_formation] = []
+
+
+    formations[identifiant_formation].append({
+        "id" : len(formations[identifiant_formation]) + 1,
+        "nom_prenom": prenom_nom,
+        "date": date,
+        "valideur" : valideur,
+        "editor" : editor,
+        "discord_name": discord_name
+    })
+    
+    with open('./json/formation.json', mode='w') as fichier:
+        json.dump(formations, fichier, indent=4)
+    return "La formation à bien été ajoutée !" 
+
+
+def supprimer_formation(identifiant_formation: str, id: int):
+    try:
+        with open('./json/formation.json', mode='r') as fichier:
+            formations = json.load(fichier)
+    except FileNotFoundError:
+        formations = {}
+
+    # Supprimer la nouvelle opération
+    del formations[identifiant_formation][id - 1]
+
+    # Met a jour les id des formations
+    for i in range (len(formations[identifiant_formation])):
+        formations[identifiant_formation][i]["id"] = i + 1
+
+
+    # Sauvegarder les données mises à jour
+    with open('./json/formation.json', mode='w') as fichier:
+        json.dump(formations, fichier, indent=4)
+    return "L'opération à bien été supprimée !" 
+
+
+def get_infos_formations(identifiant_formation: str):
+    try:
+        with open('./json/formation.json', mode='r') as fichier:
+            formations = json.load(fichier)
+    except FileNotFoundError:
+        formations = {} 
+    return formations[identifiant_formation]
+
+
+def load_roles_json():
     try:
         with open('./json/roles.json', mode='r') as fichier:
             return json.load(fichier)
@@ -106,28 +161,48 @@ def load_medic_json():
         return []
 
 
-def save_medic_json(data):
+def save_roles_json(data):
     with open('./json/roles.json', mode='w') as fichier:
         json.dump(data, fichier, indent=4)
 
 
 def get_medics_display_name():
-    json_data = load_medic_json()
+    json_data = load_roles_json()
     medics = json_data.get("medic",[])
     display_names = [medic["display"] for medic in medics]
     return display_names
 
 
+def get_chirurgien_display_name():
+    json_data = load_roles_json()
+    chirurgiens = json_data.get("chirurgien",[])
+    display_names = [chirurgien["display"] for chirurgien in chirurgiens]
+    return display_names
+
+
+def get_team_display_name():
+    json_data = load_roles_json()
+    teams = json_data.get("team",[])
+    display_names = [team["display"] for team in teams]
+    return display_names
+
+
+
+
+
 if __name__ == '__main__' : 
-    create_patient("John","Doe",35,"Homme")
-    ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne", "Faucon", "Faucon")
-    ajouter_operation("john_doe","11-10-2024","Accident de vélo", "Plaies superficielles","Faucon", "Faucon")
-    ajouter_operation("john_doe","12-10-2024","Blessure par balle", "Poumon gauche perforé","Faucon", "Faucon")
-    ajouter_operation("john_doe","13-10-2024","Greffe", "Greffe Poumon gauche","Faucon", "Faucon")
-    ajouter_operation("john_doe","14-10-2024","Rejet Greffe", "Retrait du poumon greffé","Faucon", "Faucon")
-    ajouter_operation("john_doe","15-10-2024","Greffe", "Nouvelle greffe du Poumon gauche","Faucon", "Faucon")
-    create_patient("stéphane","plaza",40,"Homme")
-    print(get_patient_infos("john_doe"))
-    create_patient("arTHUR", "cuiLLERE", 50, "Homme")
-    get_medics_display_name()
+    # create_patient("John","Doe",35,"Homme")
+    # ajouter_operation("john_doe","10-10-2024","Accident de voiture", "Emoragie interne", "Faucon", "Faucon")
+    # ajouter_operation("john_doe","11-10-2024","Accident de vélo", "Plaies superficielles","Faucon", "Faucon")
+    # ajouter_operation("john_doe","12-10-2024","Blessure par balle", "Poumon gauche perforé","Faucon", "Faucon")
+    # ajouter_operation("john_doe","13-10-2024","Greffe", "Greffe Poumon gauche","Faucon", "Faucon")
+    # ajouter_operation("john_doe","14-10-2024","Rejet Greffe", "Retrait du poumon greffé","Faucon", "Faucon")
+    # ajouter_operation("john_doe","15-10-2024","Greffe", "Nouvelle greffe du Poumon gauche","Faucon", "Faucon")
+    # create_patient("stéphane","plaza",40,"Homme")
+    # print(get_patient_infos("john_doe"))
+    # create_patient("arTHUR", "cuiLLERE", 50, "Homme")
+    # get_medics_display_name()
+
+    print(get_infos_formations("ambulances"))
     pass
+

@@ -41,6 +41,12 @@ def help():
     embed.add_field(name='', value='',inline=False)
     embed.add_field(name=':white_circle: /supprimer_operation', value='Supprime une opération du patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /afficher_formation', value='Affiche la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /ajouter_formation', value='Ajoute un nouveau personnel formé dans la liste adéquate. \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=':white_circle: /supprimer_formation', value='Supprime une formation dans la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
 
     thumbnail_path = "./images/logo_PillboxHospital.png"
     thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
@@ -166,8 +172,78 @@ def embed_fiche_patient(id_patient: str):
     embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
 
     image_path = f"./images/banner_PillboxHospital.png"
-    image_file = discord.File(image_path, filename=f"banner_PillboxHospital.png")
-    embed.set_image(url=f"attachment://banner_PillboxHospital.png")
+    image_file = discord.File(image_path, filename="banner_PillboxHospital.png")
+    embed.set_image(url="attachment://banner_PillboxHospital.png")
 
     return [embed,[thumbnail_file, image_file]]
+
+
+def embed_formations(identifiant_formation: str):
+
+    actual_formation= gestionJson.get_infos_formations(identifiant_formation)
+
+    if identifiant_formation == "Brancardiers" : 
+        title= "Fiche des brancardiers"
+        description= "Suite à cette formation les brancardiers peuvent utiliser tous les types de pansements ainsi que les kits de sutures"
+        image_path = "./images/ambulance.jpg"
+        image_file = discord.File(image_path, filename="ambulance.jpg")
+        image_url = "attachment://ambulance.jpg"
+
+
+    elif identifiant_formation == "Infirmiers" :
+        title= "Fiche des Infirmiers"
+        description= "Suite à cette formation les infirmiers peuvent utiliser de la morphine, de l'adrénaline, du sang, et le sérum"
+        image_path = "./images/ambulance.jpg"
+        image_file = discord.File(image_path, filename="ambulance.jpg")
+        image_url = "attachment://ambulance.jpg"
+
+    
+    elif identifiant_formation == "Médecins" :
+        title= "Fiche des Médecins"
+        description= "Suite à cette formation les médecins peuvent utiliser le propofol"
+        image_path = "./images/ambulance.jpg"
+        image_file = discord.File(image_path, filename="ambulance.jpg")
+        image_url = "attachment://ambulance.jpg"
+
+    
+    elif identifiant_formation == "Ambulances" :
+        title= "Fiche des personnes possédant le permis Poids-lourds"
+        description= "Suite à cette formation vous avez le droit de piloter les ambulances"
+        image_path = "./images/ambulance.jpg"
+        image_file = discord.File(image_path, filename="ambulance.jpg")
+        image_url = "attachment://ambulance.jpg"
+
+    elif identifiant_formation == "Hélicoptères" :
+        title= "Fiche des personnes possédant le permis Hélicoptère"
+        description= "Suite à cette formation vous avez le droit de piloter les hélicoptères"
+        image_path = "./images/helico.png"
+        image_file = discord.File(image_path, filename="helico.png")
+        image_url = "attachment://helico.png"
+
+
+    embed=discord.Embed(
+        title=title,
+        description=description,
+        colour=discord.Color(0xFF0000)
+    )
+
+    nb_personnel = len(actual_formation)
+    for i in range(nb_personnel):
+        embed.add_field(name='', value='',inline=False)
+        embed.add_field(
+            name=f" :red_circle: {actual_formation[i]['nom_prenom']}", 
+            value=f" ** Date ** : {actual_formation[i]['date']} \n ** Validé par : ** {actual_formation[i]['valideur']} \nNuméro de formation :  {actual_formation[i]['id']}",
+            inline=False
+            )
+    
+    embed.set_footer(text=f"Nombre de personnes formées : {nb_personnel}")
+
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+
+    embed.set_image(url=image_url)
+    return [embed,[thumbnail_file, image_file]]
+
+
 

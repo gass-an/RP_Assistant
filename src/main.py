@@ -19,6 +19,7 @@ SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))
 # Pour les permissions du bot
 CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
 CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
+CHANNEL_FOR_FORMATION: Final[int] = int(os.getenv('channel_for_formation'))
 GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
 
 # Rôles
@@ -29,7 +30,7 @@ ROLE_CHIRURGIEN: Final[int] = int(os.getenv('role_chirurgien'))
 
 
 
-# --------------------------- Initialisation du bot  -------------------------------------------------
+# ------------------------------------ Initialisation du bot  -------------------------------------------------
 intents = discord.Intents.default()
 intents.message_content = True  # NOQA
 intents.guilds = True
@@ -39,7 +40,7 @@ bot = commands.Bot(intents=intents)
 
 
 
-# --------------------------- Envoie le json à 12h tous les jours ------------------------------------
+# ------------------------------------ Envoie le json à 12h tous les jours ------------------------------------
 
 @tasks.loop(time=time(hour=1, minute=0)) # 12h heure du serveur host
 async def daily_backup():
@@ -73,15 +74,17 @@ async def on_ready():
     guild = bot.get_guild(GUILD_FOR_BOT_UTILISATION) 
     role_medic = guild.get_role(ROLE_MEDECIN)
     role_chirurgien = guild.get_role(ROLE_CHIRURGIEN)
+    role_equipe_med = guild.get_role(ROLE_EQUIPE_MED)
 
     data_medic = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_medic.members]
     data_chirurgien = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_chirurgien.members]
-    gestionJson.save_medic_json({"medic" : data_medic, "chirurgien" : data_chirurgien })
+    data_equipe_med = [{"id": member.id, "name": member.name, "display": member.display_name} for member in role_equipe_med.members]
+    gestionJson.save_roles_json({"medic" : data_medic, "chirurgien" : data_chirurgien, "team": data_equipe_med})
     
     print(f"{bot.user} est en cours d'exécution !")
 
 
-# --------------------------- Gestion des rôles ------------------------------------
+# ------------------------------------ Gestion des rôles ----------------------------------------------
 # ajoute un rôle au nouveaux arrivants
 @bot.event
 async def on_member_join(member: discord.Member):
@@ -119,9 +122,13 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     role_chirurgien_added = ROLE_CHIRURGIEN in after_roles and ROLE_CHIRURGIEN not in before_roles
     role_chirurgien_removed = ROLE_CHIRURGIEN in before_roles and ROLE_CHIRURGIEN not in after_roles
 
-    json_data = gestionJson.load_medic_json()
+    role_team_added = ROLE_EQUIPE_MED in after_roles and ROLE_EQUIPE_MED not in before_roles
+    role_team_removed = ROLE_EQUIPE_MED in before_roles and ROLE_EQUIPE_MED not in after_roles
+
+    json_data = gestionJson.load_roles_json()
     data_medic = json_data.get("medic",[])
     data_chirurgien = json_data.get("chirurgien",[])
+    data_team = json_data.get("team",[])
     updated = False
 
     if role_medic_added:
@@ -161,8 +168,31 @@ async def on_member_update(before: discord.Member, after: discord.Member):
                 member["display"] = after.display_name
                 updated = True
 
+
+
+    if role_team_added:
+        data_team.append({
+            "id": after.id, 
+            "name": after.name, 
+            "display": after.display_name
+            })
+        updated = True
+
+    if role_team_removed:
+        data_team = [member for member in data_team if member["id"] != after.id]
+        updated = True
+
+    if any(role.id == ROLE_EQUIPE_MED for role in after.roles) and before.display_name != after.display_name:
+        for member in data_team:
+            if member["id"] == after.id:
+                member["display"] = after.display_name
+                updated = True
+
+
+
+
     if updated:
-        gestionJson.save_medic_json({"medic" : data_medic, "chirurgien" : data_chirurgien })
+        gestionJson.save_roles_json({"medic" : data_medic, "chirurgien" : data_chirurgien, "team": data_team})
 
         guild = bot.get_guild(SAVE_GUILD_ID)
         channel = guild.get_channel(SAVE_CHANNEL_ID)
@@ -178,7 +208,7 @@ async def on_member_update(before: discord.Member, after: discord.Member):
             print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
-# --------------------------- Commandes prises en charges ------------------------------------
+# ------------------------------------ Commandes prises en charges ------------------------------------
 # /help  
 @bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=MY_GUILDS)
 async def help_command(interaction: discord.Interaction):
@@ -266,6 +296,13 @@ async def medic_autocomplete(interaction: discord.AutocompleteContext):
     display_names = gestionJson.get_medics_display_name()
     return display_names
 
+async def chirurgien_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_chirurgien_display_name()
+    return display_names
+
+async def team_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_team_display_name()
+    return display_names
 
 # /afficher_patient -> Affiche la fiche médicale du patient 
 @bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
@@ -278,7 +315,6 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
         )
     else :
         fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        
         await interaction.response.send_message(embed=fiche[0], files=fiche[1])
 
 
@@ -347,6 +383,86 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
 
 
 
+# /afficher_formation -> Affiche la liste des personnels formés
+@bot.slash_command(name="afficher_formation", description="Affiche la liste des personnels formés", guild_ids=MY_GUILDS)
+@discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
+@commands.has_role(ROLE_EQUIPE_MED)
+async def formation_command(interaction: discord.Interaction, formation: str):
+    if interaction.channel_id != CHANNEL_FOR_FORMATION:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    fiche = responses.embed_formations(identifiant_formation=formation)
+    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+
+
+
+
+# /ajouter_formation -> Ajoute une formation dans la liste des personnels formés
+@bot.slash_command(name="ajouter_formation", description="Ajoute un nouveau personnel formé dans la liste adéquate.", guild_ids=MY_GUILDS)
+@discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
+@discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=team_autocomplete)
+@discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
+@discord.option("valideur", str, description= "Médecin qui à pris en charge le patient", autocomplete=medic_autocomplete, required=False, default=None)
+@commands.has_role(ROLE_MEDECIN)
+async def add_formation_command(interaction: discord.Interaction, formation: str, prenom_nom: str, date: str, valideur: str):
+    if interaction.channel_id != CHANNEL_FOR_FORMATION:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    
+
+    chirurgien_role = discord.utils.get(interaction.user.roles, id=ROLE_CHIRURGIEN)
+    if formation == "Médecins" and not chirurgien_role: 
+        await interaction.response.send_message(
+            "Le rôle de chirurgien est nécessaire pour valider cette formation ! ", ephemeral=True
+        )
+        return
+    
+
+    if valideur == None :
+       valideur = interaction.user.display_name
+    
+    editor = interaction.user.display_name
+    discord_name = interaction.user.name
+    
+    gestionJson.ajouter_formation(
+        identifiant_formation=formation,
+        prenom_nom=prenom_nom,
+        date=date,
+        valideur=valideur,
+        editor=editor,
+        discord_name=discord_name
+    )
+
+    fiche = responses.embed_formations(identifiant_formation=formation)
+    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+
+
+
+
+# /supprimer_formation -> Supprime une formation dans la liste des personnels formés
+@bot.slash_command(name="supprimer_formation", description="Supprime une formation dans la liste des personnels formés", guild_ids=MY_GUILDS)
+@discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
+@discord.option("id_formation", int, description= "N° de la formation à supprimer (affiché sur la fiche de formation)")
+@commands.has_role(ROLE_MEDECIN)
+async def del_formation_command(interaction: discord.Interaction, formation: str, id_formation: int):
+    if interaction.channel_id != CHANNEL_FOR_FORMATION:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    
+    gestionJson.supprimer_formation(identifiant_formation=formation, id=id_formation)
+
+    fiche = responses.embed_formations(identifiant_formation=formation)
+    await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+
+
+
+
 # /manual_save -> Envoie le patients.json disponible que dans 'SAVE_GUILD_ID'
 @bot.slash_command(name="manual_save", description="envoie le json", guild_ids=[SAVE_GUILD_ID])
 async def manual_save_command(interaction: discord.Interaction):
@@ -354,11 +470,26 @@ async def manual_save_command(interaction: discord.Interaction):
         await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
     else:
         await daily_backup()
-        await interaction.response.send_message("Fichier json correctement envoyé !", ephemeral=True)
+        await interaction.response.send_message("Fichiers envoyés !", ephemeral=True)
 
 
-# /insert_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
-@bot.slash_command(name="insert_json",description="remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
+        guild = bot.get_guild(SAVE_GUILD_ID)
+        channel = guild.get_channel(SAVE_CHANNEL_ID)
+
+        if os.path.exists("./json/formation.json"):
+            with open("./json/formation.json", "rb") as file:
+                await channel.send(
+                    content="Sauvegarde du fichier Formation suite à une demande.",
+                    file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+                )
+        else:
+            print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
+
+
+
+
+# /insert_patients_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
+@bot.slash_command(name="insert_patients_json", description="Remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
 @discord.option("message_id", str, description= "Id du message contenant le json")
 async def insert_json_command(interaction: discord.Interaction, message_id: str ):
     if interaction.user.id != MY_ID:
@@ -385,7 +516,36 @@ async def insert_json_command(interaction: discord.Interaction, message_id: str 
         await interaction.response.send_message("Le json à bien été remplacé", ephemeral=True)
 
 
-# --------------------------- Gestion des erreurs de permissions  ------------------------------------
+# /insert_formation_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
+@bot.slash_command(name="insert_formation_json", description="Remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
+@discord.option("message_id", str, description= "Id du message contenant le json")
+async def insert_json_command(interaction: discord.Interaction, message_id: str ):
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+    else:
+        guild = bot.get_guild(SAVE_GUILD_ID)
+        channel = guild.get_channel(SAVE_CHANNEL_ID)
+        message = await channel.fetch_message(message_id)
+        attachment = message.attachments[0]
+        
+        file_path = f"./json/temp_{attachment.filename}"
+        await attachment.save(file_path)
+
+
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        file.close()
+
+
+        with open('./json/formation.json', mode='w') as fichier:
+            json.dump(data, fichier, indent=4)
+
+        os.remove(file_path)
+        await interaction.response.send_message("Le json à bien été remplacé", ephemeral=True)
+
+
+
+# ------------------------------------ Gestion des erreurs de permissions  ------------------------------------
 @bot.event
 async def on_application_command_error(interaction: discord.Interaction, error):
     if isinstance(error, commands.MissingRole):
@@ -405,3 +565,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
