@@ -461,10 +461,24 @@ async def add_formation_command(interaction: discord.Interaction, formation: str
         discord_name=discord_name
     )
 
-    #Permet de laisser le temps à la fonction pour préparer l'embed
+    # Permet de laisser le temps à la fonction pour préparer l'embed
     await interaction.response.defer()
     fiche = responses.embed_formations(identifiant_formation=formation)
     await interaction.followup.send(embed=fiche[0], files=fiche[1])
+
+
+    # Envoie le fichier après la modification
+    guild = bot.get_guild(SAVE_GUILD_ID)
+    channel = guild.get_channel(SAVE_CHANNEL_ID)
+
+    if os.path.exists("./json/formation.json"):
+        with open("./json/formation.json", "rb") as file:
+            await channel.send(
+                content="Sauvegarde du fichier Formation suite à modification.",
+                file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+            )
+    else:
+        print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
 
@@ -487,6 +501,19 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
     await interaction.response.defer()
     fiche = responses.embed_formations(identifiant_formation=formation)
     await interaction.followup.send(embed=fiche[0], files=fiche[1])
+
+    # Envoie le fichier après la modification
+    guild = bot.get_guild(SAVE_GUILD_ID)
+    channel = guild.get_channel(SAVE_CHANNEL_ID)
+
+    if os.path.exists("./json/formation.json"):
+        with open("./json/formation.json", "rb") as file:
+            await channel.send(
+                content="Sauvegarde du fichier Formation suite à modification.",
+                file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+            )
+    else:
+        print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
 
