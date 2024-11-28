@@ -323,20 +323,22 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
 @bot.slash_command(name="creer_patient", description="Créer un nouveau patient et affiche sa fiche médicale (vierge)", guild_ids=MY_GUILDS)
 @discord.option("prenom", str, description= "Prénom du patient")
 @discord.option("nom", str, description= "Nom du patient")
-@discord.option("age", int, description= "Âge du patient")
 @discord.option("sexe", str, description= "Sexe du patient", choices=["Femme","Homme","Autre"])
+@discord.option("age", int, description= "Âge du patient", required=False, default=20)
 @commands.has_role(ROLE_MEDECIN)
-async def create_patient_command(interaction: discord.Interaction, prenom: str, nom: str, age: int, sexe: str):
+async def create_patient_command(interaction: discord.Interaction, prenom: str, nom: str, sexe: str, age: int):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
-    else :
-        creator = interaction.user.name
-        id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe, creator=creator)
-        
-        fiche = responses.embed_fiche_patient(id_patient.lower())
-        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+        return
+    
+    creator = interaction.user.name
+    id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe, creator=creator)
+    
+    await interaction.response.defer()
+    fiche = responses.embed_fiche_patient(id_patient.lower())
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
@@ -346,22 +348,29 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
 @discord.option("consequences", str, description= "Bref bilan médical")
-@discord.option("medecin", str, description= "Médecin qui à pris en charge le patient", autocomplete=medic_autocomplete, required=False, default=None)
+@discord.option("medecin", str, description= "Médecin qui à pris en charge le patient", autocomplete=medic_autocomplete)
 @commands.has_role(ROLE_MEDECIN)
-async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str, medecin=None):
+async def add_operation_command(interaction: discord.Interaction, prenom_nom: str, date: str, causes: str, consequences: str, medecin: str):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
         await interaction.response.send_message(
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-        if medecin == None :
-            medecin = interaction.user.display_name
-        
+
         editor = interaction.user.display_name
         creator = interaction.user.name
-        gestionJson.ajouter_operation(identifiant_patient=prenom_nom, nouvelle_date=date, causes=causes, consequenses=consequences, medecin=medecin, editor=editor, discord_name=creator)
+        gestionJson.ajouter_operation(
+            identifiant_patient=prenom_nom,
+            nouvelle_date=date,
+            causes=causes,
+            consequenses=consequences,
+            medecin=medecin,
+            editor=editor,
+            discord_name=creator
+        )
+        await interaction.response.defer()
         fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+        await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
@@ -376,10 +385,11 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-   
+        
         gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
+        await interaction.response.defer()
         fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+        await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 
@@ -407,7 +417,7 @@ async def formation_command(interaction: discord.Interaction, formation: str):
 @discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=team_autocomplete)
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
-@discord.option("valideur", str, description= "Médecin qui à pris en charge le patient", autocomplete=medic_autocomplete, required=False, default=None)
+@discord.option("valideur", str, description= "Personnel qui à validé la formation", autocomplete=medic_autocomplete)
 @commands.has_role(ROLE_MEDECIN)
 async def add_formation_command(interaction: discord.Interaction, formation: str, prenom_nom: str, date: str, valideur: str):
     if interaction.channel_id != CHANNEL_FOR_FORMATION:
@@ -423,10 +433,6 @@ async def add_formation_command(interaction: discord.Interaction, formation: str
             "Le rôle de chirurgien est nécessaire pour valider cette formation ! ", ephemeral=True
         )
         return
-    
-
-    if valideur == None :
-       valideur = interaction.user.display_name
     
     editor = interaction.user.display_name
     discord_name = interaction.user.name
