@@ -245,8 +245,27 @@ async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_r
 
 
 
+# /roll int pour faire un D'int'
+@bot.slash_command(name="roll",description="Fait un jet de dés personalisé", guild_ids=MY_GUILDS)
+@discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
+async def roll2_command(interaction: discord.Interaction, nb_faces: int):
+
+    if interaction.channel_id != CHANNEL_FOR_ROLL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+    else :
+        answer = responses.roll(interaction, nb_faces, text_on_dice=False)
+        
+        if isinstance(answer[0], discord.Embed) :
+            await interaction.response.send_message(embed=answer[0], files=answer[1])
+            os.remove(f"./images/{answer[2]}.png")
+        else :
+            await interaction.response.send_message(answer)
+
+
 # /roll pour faire un D20
-@bot.slash_command(name="roll",description="Fait un jet de dés : D20", guild_ids=MY_GUILDS)
+@bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=MY_GUILDS)
 async def roll_command(interaction: discord.Interaction):
 
     if interaction.channel_id != CHANNEL_FOR_ROLL:
@@ -265,31 +284,12 @@ async def roll_command(interaction: discord.Interaction):
 
 
 
-# /roll2 int pour fair un D'int'
-@bot.slash_command(name="roll2",description="Fait un jet de dés personalisé", guild_ids=MY_GUILDS)
-@discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
-async def roll2_command(interaction: discord.Interaction, nb_faces: int):
-
-    if interaction.channel_id != CHANNEL_FOR_ROLL:
-        await interaction.response.send_message(
-            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
-        )
-    else :
-        answer = responses.roll(interaction, nb_faces, text_on_dice=False)
-        
-        if isinstance(answer[0], discord.Embed) :
-            await interaction.response.send_message(embed=answer[0], files=answer[1])
-            os.remove(f"./images/{answer[2]}.png")
-        else :
-            await interaction.response.send_message(answer)
-
-
 
 # ----- fonctions pour l'autocompletion ----- 
 # ids (prenom_nom) des patients dans le /patient 
 async def nom_autocomplete(interaction: discord.AutocompleteContext):
     user_input = interaction.value.lower()
-    all_ids=gestionJson.get_all_ids()
+    all_ids=gestionJson.get_all_patient_ids()
     return [id for id in all_ids if user_input in id.lower()][:25]
 
 async def medic_autocomplete(interaction: discord.AutocompleteContext):
@@ -384,12 +384,27 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
         await interaction.response.send_message(
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
-    else :
-        
-        gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
-        await interaction.response.defer()
-        fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        await interaction.followup.send(embed=fiche[0], files=fiche[1])
+        return
+
+    gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
+    await interaction.response.defer()
+    fiche = responses.embed_fiche_patient(prenom_nom.lower())
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+
+
+# /liste_patient -> Affiche le nom des patients inscrits à l'hôpital
+@bot.slash_command(name="liste_patient", description="Affiche le nom des patients inscrits à l'hôpital", guild_ids=MY_GUILDS)
+@commands.has_role(ROLE_EQUIPE_MED)
+async def patient_list_command(interaction: discord.Interaction):
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    
+    await interaction.response.defer()
+    fiche = responses.embed_list_patient()
+    await interaction.followup.send(embed=fiche[0], files=fiche[1])
 
 
 

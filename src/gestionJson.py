@@ -78,7 +78,7 @@ def supprimer_operation(identifiant_patient: str, id: int):
     return "L'opération à bien été supprimée !" 
 
 
-def get_all_ids():
+def get_all_patient_ids():
     try:
         with open('./json/patients.json', mode='r') as fichier:
                 patients = json.load(fichier)
@@ -203,6 +203,8 @@ if __name__ == '__main__' :
     # create_patient("arTHUR", "cuiLLERE", 50, "Homme")
     # get_medics_display_name()
 
-    print(get_infos_formations("ambulances"))
+    ids = get_all_patient_ids()
+    ids.sort()
+    print(ids)
     pass
 

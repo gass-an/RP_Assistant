@@ -25,27 +25,29 @@ def help():
     embed.set_footer(text="En éspérant avoir aidé")
     
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /ping', value='ping-pong (pour tester le bot)',inline=False)
+    embed.add_field(name='· /ping', value='ping-pong (pour tester le bot)',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /rename', value='Permet de se renommer en gardant une syntaxe utile pour le bot',inline=False)
+    embed.add_field(name='· /rename', value='Permet de se renommer en gardant une syntaxe utile pour le bot',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /roll', value='Fait un jet de dés : D20',inline=False)
+    embed.add_field(name='· /roll', value='Fait un jet de dés personalisé',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /roll2', value='Fait un jet de dés personalisé',inline=False)
+    embed.add_field(name='· /roll20', value='Fait un jet de dés : D20',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /afficher_patient', value='Affiche la fiche médicale du patient \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /liste_patient', value='Affiche le nom des patients inscrits à l\'hôpital \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /creer_patient', value='Créer un nouveau patient et affiche sa fiche médicale (vierge) \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /afficher_patient', value='Affiche la fiche médicale du patient \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /ajouter_operation', value='Ajoute une opération au patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /creer_patient', value='Créer un nouveau patient et affiche sa fiche médicale (vierge) \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /supprimer_operation', value='Supprime une opération du patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /ajouter_operation', value='Ajoute une opération au patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /afficher_formation', value='Affiche la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /supprimer_operation', value='Supprime une opération du patient et affiche sa nouvelle fiche médicale \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /ajouter_formation', value='Ajoute un nouveau personnel formé dans la liste adéquate. \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /afficher_formation', value='Affiche la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
-    embed.add_field(name=':white_circle: /supprimer_formation', value='Supprime une formation dans la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='· /ajouter_formation', value='Ajoute un nouveau personnel formé dans la liste adéquate. \n Cette commande nécessite un rôle particulier',inline=False)
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name='· /supprimer_formation', value='Supprime une formation dans la liste des personnels formés \n Cette commande nécessite un rôle particulier',inline=False)
     embed.add_field(name='', value='',inline=False)
 
     thumbnail_path = "./images/logo_PillboxHospital.png"
@@ -158,7 +160,7 @@ def embed_fiche_patient(id_patient: str):
     embed.set_footer(text=f"Patient n° {actual_patient['id_patient']} : {actual_patient['prenom']} {actual_patient['nom']}")
 
     nb_operation = len(actual_patient["operations"])
-    for i in  range(nb_operation): 
+    for i in range(nb_operation): 
         operation_i = actual_patient["operations"][i]
         embed.add_field(name='', value='',inline=False)
         embed.add_field(
@@ -167,6 +169,39 @@ def embed_fiche_patient(id_patient: str):
             inline=False
             )
         
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+
+    image_path = f"./images/banner_PillboxHospital.png"
+    image_file = discord.File(image_path, filename="banner_PillboxHospital.png")
+    embed.set_image(url="attachment://banner_PillboxHospital.png")
+
+    return [embed,[thumbnail_file, image_file]]
+
+
+def embed_list_patient():
+    patients=gestionJson.get_all_patient_ids()
+    patients.sort()
+
+    embed=discord.Embed(
+        title="Liste des patients",
+        description="Voici ci-dessous la liste de tous les patients enregistés à l'hôpital (par ordre alphabétique).",
+        colour=discord.Color(0xFF0000)
+    )
+
+    embed.set_footer(text="Liste de tous les patients")
+    
+    for i in range(len(patients)) : 
+        splitedName = patients[i].split("_")
+
+        embed.add_field(name='', value='',inline=False)
+        embed.add_field(
+            name=f"· {splitedName[0].capitalize()} {splitedName[1].capitalize()}", 
+            value="",
+            inline=False
+            )
+    
     thumbnail_path = "./images/logo_PillboxHospital.png"
     thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
     embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
