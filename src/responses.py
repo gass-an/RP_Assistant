@@ -220,25 +220,25 @@ def embed_formations(identifiant_formation: str):
     if identifiant_formation == "Brancardiers" : 
         title= "Fiche des brancardiers"
         description= "Suite à cette formation les brancardiers peuvent utiliser tous les types de pansements ainsi que les kits de sutures"
-        image_path = "./images/ambulance.jpg"
-        image_file = discord.File(image_path, filename="ambulance.jpg")
-        image_url = "attachment://ambulance.jpg"
+        image_path = "./images/brancardiers.png"
+        image_file = discord.File(image_path, filename="brancardiers.png")
+        image_url = "attachment://brancardiers.png"
 
 
     elif identifiant_formation == "Infirmiers" :
         title= "Fiche des Infirmiers"
         description= "Suite à cette formation les infirmiers peuvent utiliser de la morphine, de l'adrénaline, du sang, et le sérum"
-        image_path = "./images/ambulance.jpg"
-        image_file = discord.File(image_path, filename="ambulance.jpg")
-        image_url = "attachment://ambulance.jpg"
+        image_path = "./images/infirmiers.png"
+        image_file = discord.File(image_path, filename="infirmiers.png")
+        image_url = "attachment://infirmiers.png"
 
     
     elif identifiant_formation == "Médecins" :
         title= "Fiche des Médecins"
         description= "Suite à cette formation les médecins peuvent utiliser le propofol"
-        image_path = "./images/ambulance.jpg"
-        image_file = discord.File(image_path, filename="ambulance.jpg")
-        image_url = "attachment://ambulance.jpg"
+        image_path = "./images/medic.png"
+        image_file = discord.File(image_path, filename="medic.png")
+        image_url = "attachment://medic.png"
 
     
     elif identifiant_formation == "Ambulances" :
