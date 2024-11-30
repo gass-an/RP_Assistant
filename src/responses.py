@@ -147,8 +147,39 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
     return [embed,[image_file,thumbnail_file],random_number]
 
 
-def embed_fiche_patient(id_patient: str):
+def generate_list_patient_embed(patients, current_page, total_pages, identifiant):
+    
+    embed=discord.Embed(
+            title="Liste des patients",
+            description="Voici ci-dessous la liste de tous les patients enregistés à l'hôpital (par ordre alphabétique).",
+            colour=discord.Color(0xFF0000)
+        )
+    embed.set_footer(text=f"Nombre de patients inscrits : {len(gestionJson.get_all_patient_ids())}\nPage {current_page + 1}/{total_pages}")
 
+    for patient_id in patients:
+        prenom, nom = patient_id.split("_")
+        embed.add_field(name='', value='',inline=False)
+        embed.add_field(
+            name=f"· {prenom.capitalize()} {nom.capitalize()}",
+            value="",
+            inline=False
+        )
+    
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+
+    image_path = f"./images/banner_PillboxHospital.png"
+    image_file = discord.File(image_path, filename="banner_PillboxHospital.png")
+    embed.set_image(url="attachment://banner_PillboxHospital.png")
+
+    files =[thumbnail_file,image_file]
+
+    return embed,files
+
+
+def generate_fiche_patient_embed(operations, current_page, total_pages, id_patient):
+    
     actual_patient= gestionJson.get_patient_infos(id_patient)
 
     embed=discord.Embed(
@@ -157,15 +188,13 @@ def embed_fiche_patient(id_patient: str):
         colour=discord.Color(0xFF0000)
     )
 
-    embed.set_footer(text=f"Patient n° {actual_patient['id_patient']} : {actual_patient['prenom']} {actual_patient['nom']}")
+    embed.set_footer(text=f"Patient n° {actual_patient['id_patient']} : {actual_patient['prenom']} {actual_patient['nom']}\nPage {current_page + 1}/{total_pages}")
 
-    nb_operation = len(actual_patient["operations"])
-    for i in range(nb_operation): 
-        operation_i = actual_patient["operations"][i]
+    for operation in operations: 
         embed.add_field(name='', value='',inline=False)
         embed.add_field(
-            name=f"\n\n :red_circle: Opération n°{operation_i['id']} : {operation_i['causes']} ", 
-            value=f"** Date : ** {operation_i['date']} \n  {operation_i['consequences' ]} \n ** Médecin : ** {operation_i['medecin']}",
+            name=f"\n\n :red_circle: Opération n°{operation['id']} : {operation['causes']} ", 
+            value=f"** Date : ** {operation['date']} \n  {operation['consequences' ]} \n ** Médecin : ** {operation['medecin']}",
             inline=False
             )
         
@@ -177,43 +206,10 @@ def embed_fiche_patient(id_patient: str):
     image_file = discord.File(image_path, filename="banner_PillboxHospital.png")
     embed.set_image(url="attachment://banner_PillboxHospital.png")
 
-    return [embed,[thumbnail_file, image_file]]
+    return embed,[thumbnail_file, image_file]
 
 
-def embed_list_patient():
-    patients=gestionJson.get_all_patient_ids()
-    patients.sort()
-
-    embed=discord.Embed(
-        title="Liste des patients",
-        description="Voici ci-dessous la liste de tous les patients enregistés à l'hôpital (par ordre alphabétique).",
-        colour=discord.Color(0xFF0000)
-    )
-
-    embed.set_footer(text="Liste de tous les patients")
-    
-    for i in range(len(patients)) : 
-        splitedName = patients[i].split("_")
-
-        embed.add_field(name='', value='',inline=False)
-        embed.add_field(
-            name=f"· {splitedName[0].capitalize()} {splitedName[1].capitalize()}", 
-            value="",
-            inline=False
-            )
-    
-    thumbnail_path = "./images/logo_PillboxHospital.png"
-    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
-    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
-
-    image_path = f"./images/banner_PillboxHospital.png"
-    image_file = discord.File(image_path, filename="banner_PillboxHospital.png")
-    embed.set_image(url="attachment://banner_PillboxHospital.png")
-
-    return [embed,[thumbnail_file, image_file]]
-
-
-def embed_formations(identifiant_formation: str):
+def generate_formation_embed(formations, current_page, total_pages, identifiant_formation: str):
 
     actual_formation= gestionJson.get_infos_formations(identifiant_formation)
 
@@ -224,7 +220,6 @@ def embed_formations(identifiant_formation: str):
         image_file = discord.File(image_path, filename="brancardiers.png")
         image_url = "attachment://brancardiers.png"
 
-
     elif identifiant_formation == "Infirmiers" :
         title= "Fiche des Infirmiers"
         description= "Suite à cette formation les infirmiers peuvent utiliser de la morphine, de l'adrénaline, du sang, et le sérum"
@@ -232,7 +227,6 @@ def embed_formations(identifiant_formation: str):
         image_file = discord.File(image_path, filename="infirmiers.png")
         image_url = "attachment://infirmiers.png"
 
-    
     elif identifiant_formation == "Médecins" :
         title= "Fiche des Médecins"
         description= "Suite à cette formation les médecins peuvent utiliser le propofol"
@@ -240,7 +234,6 @@ def embed_formations(identifiant_formation: str):
         image_file = discord.File(image_path, filename="medic.png")
         image_url = "attachment://medic.png"
 
-    
     elif identifiant_formation == "Ambulances" :
         title= "Fiche des personnes possédant le permis Poids-lourds"
         description= "Suite à cette formation vous avez le droit de piloter les ambulances"
@@ -263,15 +256,16 @@ def embed_formations(identifiant_formation: str):
     )
 
     nb_personnel = len(actual_formation)
-    for i in range(nb_personnel):
+    
+    for formation in formations:
         embed.add_field(name='', value='',inline=False)
         embed.add_field(
-            name=f" :red_circle: {actual_formation[i]['nom_prenom']}", 
-            value=f" ** Date ** : {actual_formation[i]['date']} \n ** Validé par : ** {actual_formation[i]['valideur']} \nNuméro de formation :  {actual_formation[i]['id']}",
+            name=f" :red_circle: {formation['nom_prenom']}", 
+            value=f" ** Date ** : {formation['date']} \n ** Validé par : ** {formation['valideur']} \nNuméro de formation :  {formation['id']}",
             inline=False
             )
     
-    embed.set_footer(text=f"Nombre de personnes formées : {nb_personnel}")
+    embed.set_footer(text=f"Nombre de personnes formées : {nb_personnel}\nPage {current_page + 1}/{total_pages}")
 
     thumbnail_path = "./images/logo_PillboxHospital.png"
     thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
@@ -279,6 +273,4 @@ def embed_formations(identifiant_formation: str):
 
     embed.set_image(url=image_url)
     return [embed,[thumbnail_file, image_file]]
-
-
 

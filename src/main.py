@@ -3,7 +3,7 @@ import os,discord, json
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
 from datetime import datetime, time
-import responses, gestionJson
+import responses, gestionJson, gestionPages
 
 
 # --------------------------- Récupération des infos dans le .env  (Token / ids) ---------------------
@@ -284,6 +284,31 @@ async def roll_command(interaction: discord.Interaction):
 
 
 
+# /liste_patient -> Affiche le nom des patients inscrits à l'hôpital
+@bot.slash_command(name="liste_patient", description="Affiche le nom des patients inscrits à l'hôpital", guild_ids=MY_GUILDS)
+@commands.has_role(ROLE_EQUIPE_MED)
+async def patient_list_command(interaction: discord.Interaction):
+    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    
+    patients = gestionJson.get_all_patient_ids()
+    patients.sort()
+    if not patients:
+        await interaction.response.send_message(
+            "Aucun patient n'est enregistré pour le moment.", ephemeral=True
+        )
+        return
+    
+
+    await interaction.response.defer()
+    paginator = gestionPages.Paginator(items=patients,embed_generator=responses.generate_list_patient_embed)
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
+
+
 
 # ----- fonctions pour l'autocompletion ----- 
 # ids (prenom_nom) des patients dans le /patient 
@@ -314,8 +339,12 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-        fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        await interaction.response.send_message(embed=fiche[0], files=fiche[1])
+        
+        operations = gestionJson.get_patient_infos(prenom_nom.lower())["operations"]
+        await interaction.response.defer()
+        paginator = gestionPages.Paginator(items=operations,embed_generator=responses.generate_fiche_patient_embed, identifiant_for_embed=prenom_nom.lower())
+        embed,files = paginator.create_embed()
+        await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
 
@@ -336,9 +365,11 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
     creator = interaction.user.name
     id_patient = gestionJson.create_patient(prenom=prenom, nom=nom, age=age, sexe=sexe, creator=creator)
     
+    operations = gestionJson.get_patient_infos(id_patient.lower())["operations"]
     await interaction.response.defer()
-    fiche = responses.embed_fiche_patient(id_patient.lower())
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+    paginator = gestionPages.Paginator(items=operations,embed_generator=responses.generate_fiche_patient_embed, identifiant_for_embed=id_patient.lower())
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
 
@@ -368,9 +399,12 @@ async def add_operation_command(interaction: discord.Interaction, prenom_nom: st
             editor=editor,
             discord_name=creator
         )
+
+        operations = gestionJson.get_patient_infos(prenom_nom.lower())["operations"]
         await interaction.response.defer()
-        fiche = responses.embed_fiche_patient(prenom_nom.lower())
-        await interaction.followup.send(embed=fiche[0], files=fiche[1])
+        paginator = gestionPages.Paginator(items=operations,embed_generator=responses.generate_fiche_patient_embed, identifiant_for_embed=prenom_nom.lower())
+        embed,files = paginator.create_embed()
+        await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
 
@@ -387,24 +421,12 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
         return
 
     gestionJson.supprimer_operation(identifiant_patient=prenom_nom, id=id_operation)
-    await interaction.response.defer()
-    fiche = responses.embed_fiche_patient(prenom_nom.lower())
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
-
-
-# /liste_patient -> Affiche le nom des patients inscrits à l'hôpital
-@bot.slash_command(name="liste_patient", description="Affiche le nom des patients inscrits à l'hôpital", guild_ids=MY_GUILDS)
-@commands.has_role(ROLE_EQUIPE_MED)
-async def patient_list_command(interaction: discord.Interaction):
-    if interaction.channel_id != CHANNEL_FOR_MEDICAL:
-        await interaction.response.send_message(
-            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
-        )
-        return
     
+    operations = gestionJson.get_patient_infos(prenom_nom.lower())["operations"]
     await interaction.response.defer()
-    fiche = responses.embed_list_patient()
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+    paginator = gestionPages.Paginator(items=operations,embed_generator=responses.generate_fiche_patient_embed, identifiant_for_embed=prenom_nom.lower())
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
 
@@ -419,10 +441,13 @@ async def formation_command(interaction: discord.Interaction, formation: str):
         )
         return
     
-    #Permet de laisser le temps à la fonction pour préparer l'embed
+
+    formations = gestionJson.get_infos_formations(formation)
+    
     await interaction.response.defer()
-    fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+    paginator = gestionPages.Paginator(items=formations, embed_generator=responses.generate_formation_embed, identifiant_for_embed=formation)
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
 
@@ -461,10 +486,11 @@ async def add_formation_command(interaction: discord.Interaction, formation: str
         discord_name=discord_name
     )
 
-    # Permet de laisser le temps à la fonction pour préparer l'embed
+    formations = gestionJson.get_infos_formations(formation)
     await interaction.response.defer()
-    fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+    paginator = gestionPages.Paginator(items=formations, embed_generator=responses.generate_formation_embed, identifiant_for_embed=formation)
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
     # Envoie le fichier après la modification
@@ -497,10 +523,11 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
     
     gestionJson.supprimer_formation(identifiant_formation=formation, id=id_formation)
 
-    #Permet de laisser le temps à la fonction pour préparer l'embed
+    formations = gestionJson.get_infos_formations(formation)
     await interaction.response.defer()
-    fiche = responses.embed_formations(identifiant_formation=formation)
-    await interaction.followup.send(embed=fiche[0], files=fiche[1])
+    paginator = gestionPages.Paginator(items=formations, embed_generator=responses.generate_formation_embed, identifiant_for_embed=formation)
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, files=files, view=paginator)
 
     # Envoie le fichier après la modification
     guild = bot.get_guild(SAVE_GUILD_ID)
@@ -617,6 +644,7 @@ async def on_application_command_error(interaction: discord.Interaction, error):
 
 def main():
     bot.run(TOKEN)
+
 
 if __name__ == '__main__':
     main()
