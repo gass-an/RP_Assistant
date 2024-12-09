@@ -274,3 +274,23 @@ def generate_formation_embed(formations, current_page, total_pages, identifiant_
     embed.set_image(url=image_url)
     return [embed,[thumbnail_file, image_file]]
 
+
+def get_response(user_message):
+    lowered = user_message.lower()
+    words = set(lowered.split())
+
+    ems = {"ems", "medic", "médic", "médecin", "medecin","médecins", "medecins", "docteur"}
+    action = {"co", "connecte", "connecté","connectes", "connectés", "ville", "arrive", "arrivent", "svp", "service", "services", "avoir", "dispo", "disponible", "disponibles"}
+
+    if words & ems:
+        if words & action:
+            message = ("## Message du Pillbox Hospital\n"
+                       "Il existe une façon in-game pour le savoir ! \n\n"
+                       "Utilise ton téléphone -> Contact -> EMS, si tu peux nous appeler alors on est là !\n\n"
+                       "Dans ce cas, si ça fait longtemps que tu atttends n'hésite pas à faire un /911ems\n"
+                       "Et si on est pas là, il y a toujours l'unité X :)\n"
+                       "Toute l'équipe médicale te remercie et te souhaite bon jeu."
+                       )
+            return message
+
+    return None

@@ -1,8 +1,9 @@
 from typing import Final, List
-import os,discord, json
+import os,discord,json
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
-from datetime import datetime, time
+from datetime import datetime, time, timezone
+import pytz
 import responses, gestionJson, gestionPages
 
 
@@ -20,6 +21,7 @@ SAVE_CHANNEL_ID: Final[int] = int(os.getenv('channel_for_save'))
 CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
 CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
 CHANNEL_FOR_FORMATION: Final[int] = int(os.getenv('channel_for_formation'))
+CHANNEL_FOR_LOGS: Final[int] = int(os.getenv('channel_for_logs'))
 GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
 
 # Rôles
@@ -208,6 +210,114 @@ async def on_member_update(before: discord.Member, after: discord.Member):
             print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
+# ------------------------------------ Gestion des messages --------------------------------------------
+async def send_message(message: discord.Message, user_message) :
+    if not user_message:
+        print("Le message est vide")
+        return
+    
+    response = responses.get_response(user_message)
+    if response == None:
+        return    
+    await message.channel.send(response)
+
+
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author == bot.user:
+        return
+    user_message = message.content
+    await send_message(message, user_message)
+
+
+@bot.event
+async def on_message_edit(before: discord.Message, after:discord.Message):
+    if after.author == bot.user:
+        return
+    user_message = after.content
+    await send_message(after, user_message)
+
+    if after.guild.id == GUILD_FOR_BOT_UTILISATION : 
+        log_channel = bot.get_channel(CHANNEL_FOR_LOGS)
+        if log_channel:
+            channel = str(after.channel)
+            username = str(after.author.name)
+            username_on_server = after.author.display_name
+            
+            edit_time = after.edited_at.astimezone(pytz.timezone('Pacific/Noumea'))
+            formated_edit_time = edit_time.strftime("%d/%m/%Y %H:%M:%S")
+            
+            created_time = after.created_at.astimezone(pytz.timezone('Pacific/Noumea'))
+            formated_created_time = created_time.strftime("%d/%m/%Y %H:%M:%S")
+            
+            attachments = before.attachments
+            attachments_list = []
+            if attachments:
+                for attachment in attachments:
+                    attachments_list.append(attachment.url)
+
+            await log_channel.send(
+                f"## :recycle: **Edit d'un Message** \n"
+                f"**Channel :** {channel} \t **From : **{username} ({username_on_server})\t "
+                f"**Created time :** {formated_created_time} \t "
+                f"**Edit time :** {formated_edit_time} \n"
+                f"**Avant Edit :** {before.content}\n"
+                f"**Après Edit :** {after.content}\n"
+                f"**Avant Attachments :** {attachments_list}"
+            )
+
+
+@bot.event
+async def on_message_delete(message: discord.Message):
+    if message.guild.id == GUILD_FOR_BOT_UTILISATION : 
+        log_channel = bot.get_channel(CHANNEL_FOR_LOGS)
+        if log_channel:
+            channel = str(message.channel)
+            username = str(message.author.name)
+            username_on_server = message.author.display_name
+            
+            supression_time = datetime.now().astimezone(pytz.timezone('Pacific/Noumea'))
+            formated_supression_time = supression_time.strftime("%d/%m/%Y %H:%M:%S")
+            
+            created_time = message.created_at.astimezone(pytz.timezone('Pacific/Noumea'))
+            formated_created_time = created_time.strftime("%d/%m/%Y %H:%M:%S")
+
+            attachments = message.attachments
+            attachments_list = []
+            if attachments:
+                for attachment in attachments:
+                    attachments_list.append(attachment.url)
+
+            await log_channel.send(
+                f"## :put_litter_in_its_place: **Supression d'un Message** \n"
+                f"**Channel :** {channel} \t **From : **{username} ({username_on_server})\t"
+                f"**Created time :** {formated_created_time} \t" 
+                f"**Supression time :** {formated_supression_time} \n"
+                f"**Contenu :** {message.content}\n"
+                f"**Attachments :** {attachments_list}" 
+            )
+
+
+# ------------------------------------ Fonctions pour l'autocompletion ------------------------------------ 
+# ids (prenom_nom) des patients dans le /patient 
+async def nom_autocomplete(interaction: discord.AutocompleteContext):
+    user_input = interaction.value.lower()
+    all_ids=gestionJson.get_all_patient_ids()
+    return [id for id in all_ids if user_input in id.lower()][:25]
+
+async def medic_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_medics_display_name()
+    return display_names
+
+async def chirurgien_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_chirurgien_display_name()
+    return display_names
+
+async def team_autocomplete(interaction: discord.AutocompleteContext):
+    display_names = gestionJson.get_team_display_name()
+    return display_names
+
+
 # ------------------------------------ Commandes prises en charges ------------------------------------
 # /help  
 @bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=MY_GUILDS)
@@ -309,25 +419,6 @@ async def patient_list_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed, files=files, view=paginator)
 
 
-
-# ----- fonctions pour l'autocompletion ----- 
-# ids (prenom_nom) des patients dans le /patient 
-async def nom_autocomplete(interaction: discord.AutocompleteContext):
-    user_input = interaction.value.lower()
-    all_ids=gestionJson.get_all_patient_ids()
-    return [id for id in all_ids if user_input in id.lower()][:25]
-
-async def medic_autocomplete(interaction: discord.AutocompleteContext):
-    display_names = gestionJson.get_medics_display_name()
-    return display_names
-
-async def chirurgien_autocomplete(interaction: discord.AutocompleteContext):
-    display_names = gestionJson.get_chirurgien_display_name()
-    return display_names
-
-async def team_autocomplete(interaction: discord.AutocompleteContext):
-    display_names = gestionJson.get_team_display_name()
-    return display_names
 
 # /afficher_patient -> Affiche la fiche médicale du patient 
 @bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
@@ -544,7 +635,6 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
 
 
 
-
 # /manual_save -> Envoie le patients.json disponible que dans 'SAVE_GUILD_ID'
 @bot.slash_command(name="manual_save", description="envoie le json", guild_ids=[SAVE_GUILD_ID])
 async def manual_save_command(interaction: discord.Interaction):
@@ -566,7 +656,6 @@ async def manual_save_command(interaction: discord.Interaction):
                 )
         else:
             print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
-
 
 
 
