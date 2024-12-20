@@ -77,19 +77,19 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
             color = (255, 0, 0)
             color_hexa = 0xFF0000
             text_footer = "Échec critique !"
-        elif random_number > 1 and random_number < (nb_faces//2):
+        elif random_number > 1 and random_number < (20//2):
             color = (255, 127, 0)
             color_hexa = 0xFF7F00
             text_footer = "Échec ... "
-        elif random_number == (nb_faces//2):
+        elif random_number == (20//2):
             color = (255, 255, 0)
             color_hexa = 0xFFFF00
             text_footer = "Ni bon, ni mauvais... "
-        elif random_number > (nb_faces//2) and random_number < nb_faces:
+        elif random_number > (20//2) and random_number < 20:
             color = (0, 150, 0)
             color_hexa = 0x009600
             text_footer = "Réussite."
-        elif random_number == nb_faces : 
+        elif random_number == 20 : 
             color = (0, 230, 0)
             color_hexa = 0x00E600
             text_footer = "Réussite critique !" 
