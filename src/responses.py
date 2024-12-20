@@ -1,7 +1,7 @@
 import random
 import discord
 import images, gestionJson
-
+import os
 
 def ping(interaction: discord.Interaction):
     user = interaction.user
@@ -325,3 +325,23 @@ def get_response(user_message):
                 return message
 
     return None
+
+
+def user_embed():
+    infos_message = gestionJson.get_infos_message()
+
+    embed=discord.Embed(
+            title=infos_message['titre'],
+            description=infos_message['description'],
+            colour=discord.Color(0xFF0000)
+        )
+    embed.set_footer(text=infos_message['footer'])
+    
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+
+
+    os.remove(f"./json/message.json")
+
+    return embed,thumbnail_file

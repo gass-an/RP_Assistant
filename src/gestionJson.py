@@ -256,6 +256,15 @@ def get_team_display_name():
     return display_names
 
 
+# ------ User Embed ---------
+
+def get_infos_message():
+    try:
+        with open('./json/message.json', mode='r') as fichier:
+            return json.load(fichier)
+    except FileNotFoundError:
+        return 
+
 
 
 

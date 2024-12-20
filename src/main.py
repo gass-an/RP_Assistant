@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 from datetime import datetime, time, timezone
 from dateutil.relativedelta import relativedelta
 import pytz
-import responses, gestionJson, gestionPages
+import responses, gestionJson, gestionPages, gestionModal
 
 
 # --------------------------- Récupération des infos dans le .env  (Token / ids) ---------------------
@@ -387,7 +387,7 @@ async def roll_command(interaction: discord.Interaction):
             "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
         )
     else :
-        nb_faces = 20
+        nb_faces = 5
         answer = responses.roll(interaction, nb_faces, text_on_dice=True)
         
         if isinstance(answer[0], discord.Embed) :
@@ -719,6 +719,28 @@ async def reset_facture(interaction: discord.Interaction, identifiant_facture: s
         )
     embed,files = paginator.create_embed()
     await interaction.followup.send(embed=embed, file=files[0], view=paginator)
+
+
+# ------- Envoi Embed --------
+
+@bot.slash_command(name="send_embed", description="Envoie un embed en fonction des réponses d'un formulaire",guild_ids=[GUILD_FOR_BOT_UTILISATION])
+async def send_form(interaction: discord.Interaction):
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+        return
+    await interaction.response.send_modal(gestionModal.FormulaireModal())
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------- Saves --------
 
