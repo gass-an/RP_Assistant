@@ -382,11 +382,11 @@ async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 @bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def roll_command(interaction: discord.Interaction):
 
-    if interaction.channel_id != CHANNEL_FOR_ROLL:
-        await interaction.response.send_message(
-            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
-        )
-    else :
+    # if interaction.channel_id != CHANNEL_FOR_ROLL:
+    #     await interaction.response.send_message(
+    #         "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+    #     )
+    # else :
         nb_faces = 5
         answer = responses.roll(interaction, nb_faces, text_on_dice=True)
         
