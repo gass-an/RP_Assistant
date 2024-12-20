@@ -65,6 +65,8 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
     # Chemins en fonction de l'image de fond souhaitée
     if text_on_dice :
         
+        description = f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D20 \n\nRésultat :"
+
         font_path = "/app/fonts/arial.ttf"
         if random_number in [2,4,6,8,10,12,14,16,18,20]:
             bg_path = "./images/bg_dice_impairs.png"
@@ -99,6 +101,7 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
         font_path = "/app/fonts/LHANDW.TTF"
         bg_path = "./images/bg_roll.jpg"
 
+        description = f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D{nb_faces} \n\nRésultat :"
         # Couleur et footer en fonction du résultat du dé
         if random_number == 1 :
             color = (255, 0, 0)
@@ -125,7 +128,7 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
     # création de l'embed 
     embed = discord.Embed(
         title=f":game_die: **Jet de dés pour {username_on_server}** ",
-        description=f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D{nb_faces} \n\nRésultat :",
+        description= description,
         colour= discord.Color(color_hexa)
     )
 
