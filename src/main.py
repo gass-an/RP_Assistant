@@ -3,6 +3,7 @@ import os,discord,json
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
 from datetime import datetime, time, timezone
+from dateutil.relativedelta import relativedelta
 import pytz
 import responses, gestionJson, gestionPages
 
@@ -22,6 +23,7 @@ CHANNEL_FOR_ROLL: Final[int] = int(os.getenv('channel_for_roll'))
 CHANNEL_FOR_MEDICAL: Final[int] = int(os.getenv('channel_for_medical'))
 CHANNEL_FOR_FORMATION: Final[int] = int(os.getenv('channel_for_formation'))
 CHANNEL_FOR_LOGS: Final[int] = int(os.getenv('channel_for_logs'))
+CHANNEL_FOR_FACTURES: Final[int] = int(os.getenv('channel_for_factures'))
 GUILD_FOR_BOT_UTILISATION: Final[int] = int(os.getenv('guild_for_bot_utilisation'))
 
 # Rôles
@@ -320,7 +322,7 @@ async def team_autocomplete(interaction: discord.AutocompleteContext):
 
 # ------------------------------------ Commandes prises en charges ------------------------------------
 # /help  
-@bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=MY_GUILDS)
+@bot.slash_command(name="help",description="Répertorie les commandes du bot", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def help_command(interaction: discord.Interaction):
     
     answer = responses.help()
@@ -338,7 +340,7 @@ async def ping_command(interaction: discord.Interaction):
 
 
 # /rename -> renomme les gens en "Prenom Nom"  (ne fonctionne pas avec le proprio du serv)
-@bot.slash_command(name="rename",description="Permet de se renommer en gardant une syntaxe utile pour le bot", guild_ids=MY_GUILDS)
+@bot.slash_command(name="rename",description="Permet de se renommer en gardant une syntaxe utile pour le bot", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("prenom_rp", str, description= "Votre prénom")
 @discord.option("nom_rp", str, description= "Votre nom")
 async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_rp: str):
@@ -355,8 +357,10 @@ async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_r
 
 
 
+# ------- Roll --------
+
 # /roll int pour faire un D'int'
-@bot.slash_command(name="roll",description="Fait un jet de dés personalisé", guild_ids=MY_GUILDS)
+@bot.slash_command(name="roll",description="Fait un jet de dés personalisé", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
 async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
@@ -375,7 +379,7 @@ async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
 
 # /roll pour faire un D20
-@bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=MY_GUILDS)
+@bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def roll_command(interaction: discord.Interaction):
 
     if interaction.channel_id != CHANNEL_FOR_ROLL:
@@ -394,8 +398,10 @@ async def roll_command(interaction: discord.Interaction):
 
 
 
+# ------- Patients --------
+
 # /liste_patient -> Affiche le nom des patients inscrits à l'hôpital
-@bot.slash_command(name="liste_patient", description="Affiche le nom des patients inscrits à l'hôpital", guild_ids=MY_GUILDS)
+@bot.slash_command(name="liste_patient", description="Affiche le nom des patients inscrits à l'hôpital", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @commands.has_role(ROLE_EQUIPE_MED)
 async def patient_list_command(interaction: discord.Interaction):
     if interaction.channel_id != CHANNEL_FOR_MEDICAL:
@@ -421,7 +427,7 @@ async def patient_list_command(interaction: discord.Interaction):
 
 
 # /afficher_patient -> Affiche la fiche médicale du patient 
-@bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=MY_GUILDS)
+@bot.slash_command(name="afficher_patient", description="Affiche la fiche médicale du patient", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 @commands.has_role(ROLE_EQUIPE_MED)
 async def patient_command(interaction: discord.Interaction, prenom_nom: str):
@@ -440,7 +446,7 @@ async def patient_command(interaction: discord.Interaction, prenom_nom: str):
 
 
 # /creer_patient -> Créer un nouveau patient et affiche sa fiche médicale (vierge) 
-@bot.slash_command(name="creer_patient", description="Créer un nouveau patient et affiche sa fiche médicale (vierge)", guild_ids=MY_GUILDS)
+@bot.slash_command(name="creer_patient", description="Créer un nouveau patient et affiche sa fiche médicale (vierge)", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("prenom", str, description= "Prénom du patient")
 @discord.option("nom", str, description= "Nom du patient")
 @discord.option("sexe", str, description= "Sexe du patient", choices=["Femme","Homme","Autre"])
@@ -465,7 +471,7 @@ async def create_patient_command(interaction: discord.Interaction, prenom: str, 
 
 
 # /ajouter_operation -> Ajoute une opération au patient et affiche sa nouvelle fiche médicale
-@bot.slash_command(name="ajouter_operation", description="Ajoute une opération au patient et affiche sa nouvelle fiche médicale", guild_ids=MY_GUILDS)
+@bot.slash_command(name="ajouter_operation", description="Ajoute une opération au patient et affiche sa nouvelle fiche médicale", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
 @discord.option("causes", str, description= "Pourquoi ce patient est à l'hôpital ?")
@@ -500,7 +506,7 @@ async def add_operation_command(interaction: discord.Interaction, prenom_nom: st
 
 
 # /supprimer_operation -> Supprime une opération du patient et affiche sa nouvelle fiche médicale
-@bot.slash_command(name="supprimer_operation", description="Supprime une opération du patient et affiche sa nouvelle fiche médicale", guild_ids=MY_GUILDS)
+@bot.slash_command(name="supprimer_operation", description="Supprime une opération du patient et affiche sa nouvelle fiche médicale", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=nom_autocomplete)
 @discord.option("id_operation", int, description= "N° de l'opération à supprimer (affiché sur sa fiche médicale)")
 @commands.has_role(ROLE_MEDECIN)
@@ -521,8 +527,11 @@ async def del_operation_command(interaction: discord.Interaction, prenom_nom: st
 
 
 
+
+# ------- Formations --------
+
 # /afficher_formation -> Affiche la liste des personnels formés
-@bot.slash_command(name="afficher_formation", description="Affiche la liste des personnels formés", guild_ids=MY_GUILDS)
+@bot.slash_command(name="afficher_formation", description="Affiche la liste des personnels formés", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
 @commands.has_role(ROLE_EQUIPE_MED)
 async def formation_command(interaction: discord.Interaction, formation: str):
@@ -544,7 +553,7 @@ async def formation_command(interaction: discord.Interaction, formation: str):
 
 
 # /ajouter_formation -> Ajoute une formation dans la liste des personnels formés
-@bot.slash_command(name="ajouter_formation", description="Ajoute un nouveau personnel formé dans la liste adéquate.", guild_ids=MY_GUILDS)
+@bot.slash_command(name="ajouter_formation", description="Ajoute un nouveau personnel formé dans la liste adéquate.", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
 @discord.option("prenom_nom", str, description= "Selectionner l'id du patient.", autocomplete=team_autocomplete)
 @discord.option("date", str, description= "De la forme : JJ-MM-AAAA")
@@ -601,7 +610,7 @@ async def add_formation_command(interaction: discord.Interaction, formation: str
 
 
 # /supprimer_formation -> Supprime une formation dans la liste des personnels formés
-@bot.slash_command(name="supprimer_formation", description="Supprime une formation dans la liste des personnels formés", guild_ids=MY_GUILDS)
+@bot.slash_command(name="supprimer_formation", description="Supprime une formation dans la liste des personnels formés", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("formation", str, description= "Selectionner la formation.", choices=["Brancardiers","Infirmiers","Médecins","Ambulances","Hélicoptères"])
 @discord.option("id_formation", int, description= "N° de la formation à supprimer (affiché sur la fiche de formation)")
 @commands.has_role(ROLE_MEDECIN)
@@ -634,6 +643,84 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
         print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
 
 
+
+
+# ------- Factures --------
+@bot.slash_command(name="afficher_facture", description="Affiche ce que nous doit une entité", guild_ids=[GUILD_FOR_BOT_UTILISATION])
+@discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
+@commands.has_role(ROLE_EQUIPE_MED)
+async def view_facture(interaction: discord.Interaction, identifiant_facture: str):
+    if interaction.channel_id != CHANNEL_FOR_FACTURES:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    factures: dict = gestionJson.get_infos_factures(identifiant_facture)["details"]
+    factures_list = list(factures.items())
+    
+    await interaction.response.defer()
+    paginator = gestionPages.Paginator(
+        items=factures_list,
+        embed_generator=responses.generate_factures_details_embed,
+        identifiant_for_embed=identifiant_facture
+        )
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, file=files[0], view=paginator)
+
+
+
+@bot.slash_command(name="ajouter_facture", description="Ajoute une facture", guild_ids=[GUILD_FOR_BOT_UTILISATION])
+@discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
+@discord.option("montant", int, description= "Montant de la facture en dollars")
+@commands.has_role(ROLE_EQUIPE_MED)
+async def add_facture(interaction: discord.Interaction, identifiant_facture: str, montant: int):
+    if interaction.channel_id != CHANNEL_FOR_FACTURES:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    date = datetime.now().astimezone(pytz.timezone('Pacific/Noumea'))
+    date_in_6_years = date + relativedelta(years=6)
+    formated_date = date_in_6_years.strftime("%d/%m/%Y")
+    gestionJson.ajouter_facture(identifiant_facture=identifiant_facture, montant=montant, date=formated_date)
+
+    factures: dict = gestionJson.get_infos_factures(identifiant_facture)["details"]
+    factures_list = list(factures.items())
+    
+    await interaction.response.defer()
+    paginator = gestionPages.Paginator(
+        items=factures_list,
+        embed_generator=responses.generate_factures_details_embed,
+        identifiant_for_embed=identifiant_facture
+        )
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, file=files[0], view=paginator)
+
+
+@bot.slash_command(name="supprimer_facture", description="Remet à 0 une facture", guild_ids=[GUILD_FOR_BOT_UTILISATION])
+@discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
+@commands.has_role(ROLE_EQUIPE_MED)
+async def reset_facture(interaction: discord.Interaction, identifiant_facture: str):
+    if interaction.channel_id != CHANNEL_FOR_FACTURES:
+        await interaction.response.send_message(
+            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
+        )
+        return
+    gestionJson.supprimer_facture(identifiant_facture=identifiant_facture)
+    
+    factures: dict = gestionJson.get_infos_factures(identifiant_facture)["details"]
+    factures_list = list(factures.items())
+    
+    await interaction.response.defer()
+    paginator = gestionPages.Paginator(
+        items=factures_list,
+        embed_generator=responses.generate_factures_details_embed,
+        identifiant_for_embed=identifiant_facture
+        )
+    embed,files = paginator.create_embed()
+    await interaction.followup.send(embed=embed, file=files[0], view=paginator)
+
+# ------- Saves --------
 
 # /manual_save -> Envoie le patients.json disponible que dans 'SAVE_GUILD_ID'
 @bot.slash_command(name="manual_save", description="envoie le json", guild_ids=[SAVE_GUILD_ID])

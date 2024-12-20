@@ -275,22 +275,53 @@ def generate_formation_embed(formations, current_page, total_pages, identifiant_
     return [embed,[thumbnail_file, image_file]]
 
 
+def generate_factures_details_embed(factures, current_page, total_pages, identifiant_facture: str):
+    
+    montant_total = gestionJson.get_infos_factures(identifiant_facture)["total"]
+    
+    embed=discord.Embed(
+        title=f"Facture {identifiant_facture}",
+        description=f"Voici la facture détaillée de l'entité {identifiant_facture}",
+        colour=discord.Color(0xFF0000)
+    )
+    for facture in factures:
+        embed.add_field(name='', value='',inline=False)
+        value_str = ""
+        for i in facture[1]:
+            value_str += f"** Montant ** : {i}\n"
+        embed.add_field(
+            name=f" :red_circle: Date : {facture[0]}", 
+            value=value_str,
+            inline=False
+            )
+    
+    embed.add_field(name='', value='',inline=False)
+    embed.add_field(name=f':green_circle: Montant total : {montant_total}', value='',inline=False)
+
+    embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
+    thumbnail_path = "./images/logo_PillboxHospital.png"
+    thumbnail_file = discord.File(thumbnail_path, filename="logo_PillboxHospital.png")
+    embed.set_thumbnail(url="attachment://logo_PillboxHospital.png")
+    return [embed,[thumbnail_file]]
+
+
 def get_response(user_message):
     lowered = user_message.lower()
     words = set(lowered.split())
 
-    ems = {"ems", "medic", "médic", "médecin", "medecin","médecins", "medecins", "docteur"}
+    ems = {"ems", "medic", "médic", "médecin", "medecin","médecins", "medecins", "docteur", "quelqu'un", "quelqu un", "qulequun"}
     action = {"co", "connecte", "connecté","connectes", "connectés", "ville", "arrive", "arrivent", "svp", "service", "services", "avoir", "dispo", "disponible", "disponibles"}
 
-    if words & ems:
-        if words & action:
-            message = ("## Message du Pillbox Hospital\n"
-                       "Il existe une façon in-game pour le savoir ! \n\n"
-                       "Utilise ton téléphone -> Contact -> EMS, si tu peux nous appeler alors on est là !\n\n"
-                       "Dans ce cas, si ça fait longtemps que tu atttends n'hésite pas à faire un /911ems\n"
-                       "Et si on est pas là, il y a toujours l'unité X :)\n"
-                       "Toute l'équipe médicale te remercie et te souhaite bon jeu."
-                       )
-            return message
+    if len(lowered) < 50 :    
+        if words & ems:
+            if words & action:
+                message = ("## Message du Pillbox Hospital\n"
+                        "Il existe une façon in-game pour le savoir ! \n\n"
+                        "Utilise ton téléphone -> Contact -> EMS, si tu peux nous appeler alors on est là !\n\n"
+                        "Dans ce cas, si ça fait longtemps que tu atttends n'hésite pas à faire un /911ems\n"
+                        "Et si on est pas là, il y a toujours l'unité X :)\n"
+                        "Toute l'équipe médicale te remercie et te souhaite bon jeu."
+                        )
+                return message
 
     return None
