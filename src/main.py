@@ -356,6 +356,18 @@ async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_r
         )
 
 
+# /ephemere -> passe la variable globale en True
+@bot.slash_command(name="ephemere",description="Pour les messages éphémère", guild_ids=[GUILD_FOR_BOT_UTILISATION])
+async def ephemere_command(interaction: discord.Interaction):  
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+        return
+    if interaction.channel_id == CHANNEL_FOR_ROLL:
+        await interaction.response.send_message("Votre message est éphémère !", ephemeral=True)
+        return
+    responses.EPHEMERE = True
+    await interaction.response.send_message("Tout se passe à merveille !", ephemeral=True)
+
 
 # ------- Roll --------
 
@@ -364,11 +376,6 @@ async def rename_command(interaction: discord.Interaction, prenom_rp: str, nom_r
 @discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
 async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
-    if interaction.channel_id != CHANNEL_FOR_ROLL:
-        await interaction.response.send_message(
-            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
-        )
-    else :
         answer = responses.roll(interaction, nb_faces, text_on_dice=False)
         
         if isinstance(answer[0], discord.Embed) :
@@ -378,15 +385,10 @@ async def roll2_command(interaction: discord.Interaction, nb_faces: int):
             await interaction.response.send_message(answer)
 
 
-# /roll pour faire un D20
+# /roll20 pour faire un D20
 @bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def roll_command(interaction: discord.Interaction):
 
-    if interaction.channel_id != CHANNEL_FOR_ROLL:
-        await interaction.response.send_message(
-            "Cette commande ne peut pas être utilisée dans ce salon.", ephemeral=True
-        )
-    else :
         nb_faces = 20
         answer = responses.roll(interaction, nb_faces, text_on_dice=True)
         

@@ -3,6 +3,8 @@ import discord
 import images, gestionJson
 import os
 
+EPHEMERE = False
+
 def ping(interaction: discord.Interaction):
     user = interaction.user
     username = user.name
@@ -57,16 +59,19 @@ def help():
 
 
 def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
+    global EPHEMERE
 
     username_on_server = interaction.user.display_name
-    random_number = random.randint(1, nb_faces)
+    if EPHEMERE:
+        random_number = random.randint(1, 5)
+        EPHEMERE = False
+    else:
+        random_number = random.randint(1, nb_faces)
     random_number_str = str(random_number)
-    
+
     # Chemins en fonction de l'image de fond souhaitée
     if text_on_dice :
         
-        description = f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D20 \n\nRésultat :"
-
         font_path = "/app/fonts/arial.ttf"
         if random_number in [2,4,6,8,10,12,14,16,18,20]:
             bg_path = "./images/bg_dice_impairs.png"
@@ -79,19 +84,19 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
             color = (255, 0, 0)
             color_hexa = 0xFF0000
             text_footer = "Échec critique !"
-        elif random_number > 1 and random_number < (20//2):
+        elif random_number > 1 and random_number < (nb_faces//2):
             color = (255, 127, 0)
             color_hexa = 0xFF7F00
             text_footer = "Échec ... "
-        elif random_number == (20//2):
+        elif random_number == (nb_faces//2):
             color = (255, 255, 0)
             color_hexa = 0xFFFF00
             text_footer = "Ni bon, ni mauvais... "
-        elif random_number > (20//2) and random_number < 20:
+        elif random_number > (nb_faces//2) and random_number < nb_faces:
             color = (0, 150, 0)
             color_hexa = 0x009600
             text_footer = "Réussite."
-        elif random_number == 20 : 
+        elif random_number == nb_faces : 
             color = (0, 230, 0)
             color_hexa = 0x00E600
             text_footer = "Réussite critique !" 
@@ -101,7 +106,6 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
         font_path = "/app/fonts/LHANDW.TTF"
         bg_path = "./images/bg_roll.jpg"
 
-        description = f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D{nb_faces} \n\nRésultat :"
         # Couleur et footer en fonction du résultat du dé
         if random_number == 1 :
             color = (255, 0, 0)
@@ -128,7 +132,7 @@ def roll(interaction: discord.Interaction, nb_faces: int, text_on_dice:bool):
     # création de l'embed 
     embed = discord.Embed(
         title=f":game_die: **Jet de dés pour {username_on_server}** ",
-        description= description,
+        description= f":sparkles: Votre sort se joue maintenant ! \n\n**Type de dé** : D{nb_faces} \n\nRésultat :",
         colour= discord.Color(color_hexa)
     )
 
@@ -348,3 +352,4 @@ def user_embed():
     os.remove(f"./json/message.json")
 
     return embed,thumbnail_file
+
