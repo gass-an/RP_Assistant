@@ -376,27 +376,27 @@ async def ephemere_command(interaction: discord.Interaction):
 @discord.option("nb_faces", int, description= "Entrez un nombre compris entre 1 et 100.", min_value=1, max_value=100)
 async def roll2_command(interaction: discord.Interaction, nb_faces: int):
 
-        answer = responses.roll(interaction, nb_faces, text_on_dice=False)
-        
-        if isinstance(answer[0], discord.Embed) :
-            await interaction.response.send_message(embed=answer[0], files=answer[1])
-            os.remove(f"./images/{answer[2]}.png")
-        else :
-            await interaction.response.send_message(answer)
+    answer = responses.roll(interaction, nb_faces, text_on_dice=False)
+    
+    if isinstance(answer[0], discord.Embed) :
+        await interaction.response.send_message(embed=answer[0], files=answer[1])
+        os.remove(f"./images/{answer[2]}.png")
+    else :
+        await interaction.response.send_message(answer)
 
 
 # /roll20 pour faire un D20
 @bot.slash_command(name="roll20",description="Fait un jet de dés : D20", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def roll_command(interaction: discord.Interaction):
 
-        nb_faces = 20
-        answer = responses.roll(interaction, nb_faces, text_on_dice=True)
-        
-        if isinstance(answer[0], discord.Embed) :
-            await interaction.response.send_message(embed=answer[0], files=answer[1])
-            os.remove(f"./images/{answer[2]}.png")
-        else :
-            await interaction.response.send_message(answer)
+    nb_faces = 20
+    answer = responses.roll(interaction, nb_faces, text_on_dice=True)
+    
+    if isinstance(answer[0], discord.Embed) :
+        await interaction.response.send_message(embed=answer[0], files=answer[1])
+        os.remove(f"./images/{answer[2]}.png")
+    else :
+        await interaction.response.send_message(answer)
 
 
 
@@ -648,6 +648,8 @@ async def del_formation_command(interaction: discord.Interaction, formation: str
 
 
 # ------- Factures --------
+
+# /afficher_facture -> Affiche une facture détaillée de l'entité (police ou gouvernement)
 @bot.slash_command(name="afficher_facture", description="Affiche ce que nous doit une entité", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
 @commands.has_role(ROLE_EQUIPE_MED)
@@ -671,6 +673,7 @@ async def view_facture(interaction: discord.Interaction, identifiant_facture: st
 
 
 
+# /ajouter_facture -> Ajoute une facture à l'entité (police ou gouvernement)
 @bot.slash_command(name="ajouter_facture", description="Ajoute une facture", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
 @discord.option("montant", int, description= "Montant de la facture en dollars")
@@ -699,7 +702,8 @@ async def add_facture(interaction: discord.Interaction, identifiant_facture: str
     await interaction.followup.send(embed=embed, file=files[0], view=paginator)
 
 
-@bot.slash_command(name="supprimer_facture", description="Remet à 0 une facture", guild_ids=[GUILD_FOR_BOT_UTILISATION])
+# /reset_facture -> Reset la facture de l'entité (police ou gouvernement)
+@bot.slash_command(name="reset_facture", description="Remet à 0 une facture", guild_ids=[GUILD_FOR_BOT_UTILISATION])
 @discord.option("identifiant_facture", str, description="Selectionner l'identifiant.", choices=["Police","Gouvernement"])
 @commands.has_role(ROLE_EQUIPE_MED)
 async def reset_facture(interaction: discord.Interaction, identifiant_facture: str):
@@ -723,8 +727,12 @@ async def reset_facture(interaction: discord.Interaction, identifiant_facture: s
     await interaction.followup.send(embed=embed, file=files[0], view=paginator)
 
 
+
+
+
 # ------- Envoi Embed --------
 
+# /send_embed -> Envoie un embed en fonction des réponses d'un formulaire
 @bot.slash_command(name="send_embed", description="Envoie un embed en fonction des réponses d'un formulaire",guild_ids=[GUILD_FOR_BOT_UTILISATION])
 async def send_form(interaction: discord.Interaction):
     if interaction.user.id != MY_ID:
@@ -752,21 +760,41 @@ async def manual_save_command(interaction: discord.Interaction):
     if interaction.user.id != MY_ID:
         await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
     else:
-        await daily_backup()
-        await interaction.response.send_message("Fichiers envoyés !", ephemeral=True)
-
-
         guild = bot.get_guild(SAVE_GUILD_ID)
         channel = guild.get_channel(SAVE_CHANNEL_ID)
+
+        if os.path.exists("./json/patients.json"):
+
+            with open("./json/patients.json", "rb") as file:
+                await channel.send(
+                    content="Sauvegarde du fichier Patients suite à une demande.",
+                    file=discord.File(file, filename=f"Patients_{datetime.now().strftime('%Y%m%d')}.json")
+                )
+        else:
+            await channel.send("Fichier Patient introuvable !", ephemeral=True)
+
+
 
         if os.path.exists("./json/formation.json"):
             with open("./json/formation.json", "rb") as file:
                 await channel.send(
                     content="Sauvegarde du fichier Formation suite à une demande.",
-                    file=discord.File(file, filename=f"backup_{datetime.now().strftime('%Y%m%d')}.json")
+                    file=discord.File(file, filename=f"Formation_{datetime.now().strftime('%Y%m%d')}.json")
                 )
         else:
-            print("Le fichier JSON n'existe pas. Aucune sauvegarde envoyée.")
+            await channel.send("Fichier Formation introuvable !", ephemeral=True)
+        
+        if os.path.exists("./json/factures.json"):
+
+            with open("./json/factures.json", "rb") as file:
+                await channel.send(
+                    content="Sauvegarde du fichier Factures suite à une demande.",
+                    file=discord.File(file, filename=f"Factures_{datetime.now().strftime('%Y%m%d')}.json")
+                )
+        else:
+            await channel.send("Fichier Factures introuvable !", ephemeral=True)
+            
+    await interaction.response.send_message("Fichiers bien envoyés ! ", ephemeral=True)
 
 
 
@@ -799,7 +827,7 @@ async def insert_json_command(interaction: discord.Interaction, message_id: str 
 
 
 # /insert_formation_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
-@bot.slash_command(name="insert_formation_json", description="Remplace le json des patients par celui fourni",guild_ids=[SAVE_GUILD_ID])
+@bot.slash_command(name="insert_formation_json", description="Remplace le json des formations par celui fourni",guild_ids=[SAVE_GUILD_ID])
 @discord.option("message_id", str, description= "Id du message contenant le json")
 async def insert_json_command(interaction: discord.Interaction, message_id: str ):
     if interaction.user.id != MY_ID:
@@ -820,6 +848,35 @@ async def insert_json_command(interaction: discord.Interaction, message_id: str 
 
 
         with open('./json/formation.json', mode='w') as fichier:
+            json.dump(data, fichier, indent=4)
+
+        os.remove(file_path)
+        await interaction.response.send_message("Le json à bien été remplacé", ephemeral=True)
+
+
+
+# /insert_factures_json -> Remplace le json des patients par celui fourni 'SAVE_GUILD_ID'
+@bot.slash_command(name="insert_factures_json", description="Remplace le json des factures par celui fourni",guild_ids=[SAVE_GUILD_ID])
+@discord.option("message_id", str, description= "Id du message contenant le json")
+async def insert_json_command(interaction: discord.Interaction, message_id: str ):
+    if interaction.user.id != MY_ID:
+        await interaction.response.send_message("Vous ne pouvez pas faire cela", ephemeral=True)
+    else:
+        guild = bot.get_guild(SAVE_GUILD_ID)
+        channel = guild.get_channel(SAVE_CHANNEL_ID)
+        message = await channel.fetch_message(message_id)
+        attachment = message.attachments[0]
+        
+        file_path = f"./json/temp_{attachment.filename}"
+        await attachment.save(file_path)
+
+
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        file.close()
+
+
+        with open('./json/factures.json', mode='w') as fichier:
             json.dump(data, fichier, indent=4)
 
         os.remove(file_path)

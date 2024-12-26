@@ -47,21 +47,3 @@ class FormulaireModal(ui.Modal):
         await interaction.followup.send(embed=embed, file=file)
 
 
-
-
-
-
-# class TestModal(ui.Modal):
-#     def __init__(self):
-#         super().__init__(title="Test Modal")
-
-#         self.input = ui.InputText(
-#             label="Test Input",
-#             placeholder="Écrivez quelque chose",
-#             required=True
-#         )
-#         self.add_item(self.input)
-
-#     async def callback(self, interaction: discord.Interaction):
-#         print("on_submit appelée")  # Vérifiez si ce message s'affiche
-#         await interaction.response.send_message(f"Vous avez écrit : {self.input.value}", ephemeral=True)
