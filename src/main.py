@@ -73,7 +73,7 @@ async def on_ready():
     except Exception as e:
         print(f"Erreur lors de la synchronisation des commandes : {e}")
 
-    daily_backup.start()
+#    daily_backup.start()
 
     guild = bot.get_guild(GUILD_FOR_BOT_UTILISATION) 
     role_medic = guild.get_role(ROLE_MEDECIN)
